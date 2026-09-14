@@ -2,12 +2,18 @@ const $ = (selector) => document.querySelector(selector);
 const dialog = $('#settings');
 let state;
 let sources = [];
+let stream;
 
 function setSources(nextSources) {
   sources = nextSources;
   const select = $('#cameraSource');
   select.innerHTML = '<option value="auto">Detectar automaticamente</option>' + sources.map((source) => `<option value="${source.id}">${source.name}</option>`).join('');
   select.value = state?.camera.source || 'auto';
+}
+
+function renderStream(nextStream) {
+  stream = nextStream;
+  $('#stream').textContent = stream.running ? 'PARAR VÍDEO' : 'INICIAR VÍDEO';
 }
 
 function render(data) {
@@ -38,6 +44,10 @@ async function request(url, options) {
 $('#openSettings').addEventListener('click', () => dialog.showModal());
 $('#armButton').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ armed: !state.armed }) })));
 $('#depthHold').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ mode: state.mode === 'ALT_HOLD' ? 'STABILIZE' : 'ALT_HOLD' }) })));
+$('#stream').addEventListener('click', async () => {
+  try { renderStream(await request(stream?.running ? '/api/video/stream/stop' : '/api/video/stream/start', { method: 'POST' })); }
+  catch (error) { window.alert(error.message); }
+});
 $('#saveCamera').addEventListener('click', async (event) => { event.preventDefault(); const camera = { source: $('#cameraSource').value, resolution: $('#cameraResolution').value, fps: Number($('#cameraFps').value), bitrate: Number($('#cameraBitrate').value) }; await request('/api/camera', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify(camera) }); render(await request('/api/status')); dialog.close(); });
 $('#addRtsp').addEventListener('click', async () => {
   const url = $('#rtspUrl').value.trim();
@@ -48,4 +58,4 @@ $('#addRtsp').addEventListener('click', async () => {
   $('#rtspName').value = '';
   $('#rtspUrl').value = '';
 });
-Promise.all([request('/api/status'), request('/api/video/sources')]).then(([data, video]) => { render(data); setSources(video.sources); }).catch(console.error);
+Promise.all([request('/api/status'), request('/api/video/sources'), request('/api/video/stream')]).then(([data, video, activeStream]) => { render(data); setSources(video.sources); renderStream(activeStream); }).catch(console.error);

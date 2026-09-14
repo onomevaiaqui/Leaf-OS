@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { URL } = require('node:url');
 const { addRtspSource, listSources } = require('./lib/video');
+const stream = require('./lib/stream');
 
 const port = Number(process.env.PORT || 8080);
 const publicDirectory = path.join(__dirname, 'public');
@@ -46,6 +47,12 @@ http.createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
   if (request.method === 'GET' && url.pathname === '/api/status') return json(response, 200, rov);
   if (request.method === 'GET' && url.pathname === '/api/video/sources') return json(response, 200, { sources: listSources() });
+  if (request.method === 'GET' && url.pathname === '/api/video/stream') return json(response, 200, stream.status());
+  if (request.method === 'POST' && url.pathname === '/api/video/stream/start') {
+    try { return json(response, 200, stream.start(rov.camera, listSources())); }
+    catch (error) { return json(response, 400, { error: error.message }); }
+  }
+  if (request.method === 'POST' && url.pathname === '/api/video/stream/stop') return json(response, 200, stream.stop());
   if (request.method === 'POST' && url.pathname === '/api/video/sources/rtsp') {
     try { return json(response, 201, addRtspSource(await readBody(request))); }
     catch (error) { return json(response, 400, { error: error.message }); }
