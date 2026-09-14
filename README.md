@@ -2,6 +2,8 @@
 
 Base inicial do **Leaf OS** (embarcado no Raspberry Pi) e do **Leaf Ground Control** (interface de superfície).
 
+Consulte a [documentação completa](docs/README.md), incluindo o [manual do operador](docs/operator-manual.md) e o guia de [instalação no Raspberry Pi](docs/installation-raspberry-pi.md).
+
 ## Executar localmente
 
 Requer Node.js 20 ou superior.

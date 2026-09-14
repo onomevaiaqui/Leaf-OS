@@ -14,6 +14,14 @@ function setSources(nextSources) {
 function renderStream(nextStream) {
   stream = nextStream;
   $('#stream').textContent = stream.running ? 'PARAR VÍDEO' : 'INICIAR VÍDEO';
+  const viewer = $('#webrtcViewer');
+  if (stream.running) {
+    viewer.src = `http://${window.location.hostname}:8889/${stream.streamPath}`;
+    viewer.hidden = false;
+  } else {
+    viewer.removeAttribute('src');
+    viewer.hidden = true;
+  }
 }
 
 function render(data) {
