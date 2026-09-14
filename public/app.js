@@ -1,6 +1,14 @@
 const $ = (selector) => document.querySelector(selector);
 const dialog = $('#settings');
 let state;
+let sources = [];
+
+function setSources(nextSources) {
+  sources = nextSources;
+  const select = $('#cameraSource');
+  select.innerHTML = '<option value="auto">Detectar automaticamente</option>' + sources.map((source) => `<option value="${source.id}">${source.name}</option>`).join('');
+  select.value = state?.camera.source || 'auto';
+}
 
 function render(data) {
   state = data;
@@ -31,4 +39,13 @@ $('#openSettings').addEventListener('click', () => dialog.showModal());
 $('#armButton').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ armed: !state.armed }) })));
 $('#depthHold').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ mode: state.mode === 'ALT_HOLD' ? 'STABILIZE' : 'ALT_HOLD' }) })));
 $('#saveCamera').addEventListener('click', async (event) => { event.preventDefault(); const camera = { source: $('#cameraSource').value, resolution: $('#cameraResolution').value, fps: Number($('#cameraFps').value), bitrate: Number($('#cameraBitrate').value) }; await request('/api/camera', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify(camera) }); render(await request('/api/status')); dialog.close(); });
-Promise.all([request('/api/status')]).then(([data]) => render(data)).catch(console.error);
+$('#addRtsp').addEventListener('click', async () => {
+  const url = $('#rtspUrl').value.trim();
+  if (!url) return;
+  const source = await request('/api/video/sources/rtsp', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ name: $('#rtspName').value, url }) });
+  setSources([...sources, source]);
+  $('#cameraSource').value = source.id;
+  $('#rtspName').value = '';
+  $('#rtspUrl').value = '';
+});
+Promise.all([request('/api/status'), request('/api/video/sources')]).then(([data, video]) => { render(data); setSources(video.sources); }).catch(console.error);

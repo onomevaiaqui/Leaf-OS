@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Leaf Ground Control</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="video.css" />
   </head>
   <body>
     <main class="app-shell">
@@ -48,7 +49,8 @@
     <dialog id="settings">
       <form method="dialog">
         <div class="dialog-header"><div><span class="eyebrow">LEAF OS</span><h2>Configuração de vídeo</h2></div><button class="close" value="cancel">×</button></div>
-        <label>Fonte de câmera<select id="cameraSource"><option>USB Camera</option><option>Raspberry Pi CSI</option><option>Capturadora USB</option><option>Câmera IP / RTSP</option></select></label>
+        <label>Fonte de câmera<select id="cameraSource"><option value="auto">Detectar automaticamente</option></select></label>
+        <div class="camera-add"><span class="eyebrow">ADICIONAR CÂMERA IP</span><div class="form-row"><input id="rtspName" placeholder="Nome (opcional)" /><input id="rtspUrl" placeholder="rtsp://endereço/stream" /></div><button type="button" class="link-button" id="addRtsp">ADICIONAR URL RTSP</button></div>
         <div class="form-row"><label>Resolução<select id="cameraResolution"><option>1280x720</option><option>1920x1080</option><option>640x480</option></select></label><label>FPS<select id="cameraFps"><option value="30">30</option><option value="60">60</option><option value="25">25</option></select></label></div>
         <label>Bitrate (kbps)<input id="cameraBitrate" type="number" min="500" step="100" value="3500" /></label>
         <p class="note">Nesta versão o painel salva a configuração. A conexão real da câmera e a transmissão WebRTC entrarão no próximo módulo.</p>

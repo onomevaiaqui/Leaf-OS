@@ -16,12 +16,12 @@ Abra `http://localhost:8080` no navegador.
 
 - Interface responsiva de pilotagem para desktop e tablet.
 - API local de status, armar/desarmar, modo de voo e configuração de vídeo.
+- Descoberta automática de dispositivos V4L2 (`/dev/video*`) no Raspberry Pi/Linux e cadastro persistente de câmeras RTSP.
 - Configuração de fontes USB, CSI, capturadora e RTSP como base do Leaf OS Video.
 - Dados de telemetria e vídeo ainda são simulados: não envia comandos à Pixhawk e não captura câmera nesta versão.
 
 ## Próximos módulos
 
 1. Serviço MAVLink com acesso serial à Pixhawk.
-2. Descoberta de câmeras usando V4L2 e fontes RTSP.
-3. Pipeline GStreamer/WebRTC de baixa latência.
+2. Pipeline GStreamer/WebRTC de baixa latência.
 4. Autenticação, persistência de configurações e imagem instalável do Raspberry Pi.
