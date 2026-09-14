@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leaf Ground Control</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header>
+        <div class="brand"><span class="leaf">◆</span><div><strong>LEAF</strong><small>GROUND CONTROL</small></div></div>
+        <div class="connection"><i></i><span>ROV CONECTADO</span></div>
+        <button class="settings-button" id="openSettings" aria-label="Abrir configurações">⚙</button>
+      </header>
+
+      <section class="mission-bar">
+        <div><span class="eyebrow">VEÍCULO</span><strong>Leaf ROV · Unidade 01</strong></div>
+        <div class="status-line"><span id="armStatus" class="pill">DESARMADO</span><span id="modeStatus">STABILIZE</span></div>
+      </section>
+
+      <section class="pilot-layout">
+        <aside class="telemetry left">
+          <div class="metric"><span>PROFUNDIDADE</span><strong id="depth">0.0 <em>m</em></strong></div>
+          <div class="metric"><span>RUMO</span><strong id="heading">000<em>°</em></strong></div>
+          <div class="compass"><b>N</b><b>E</b><b>S</b><b>W</b><div class="needle" id="needle"></div></div>
+        </aside>
+        <section class="video-panel" aria-label="Câmera do ROV">
+          <div class="video-placeholder"><div class="seafloor"></div><span>AGUARDANDO FLUXO DE VÍDEO</span><small>Leaf OS Video · WebRTC será conectado aqui</small></div>
+          <div class="video-overlay"><span>CAM 01</span><span id="resolution">1280×720 · 30 FPS</span></div>
+          <div class="reticle"></div>
+        </section>
+        <aside class="telemetry right">
+          <div class="metric"><span>BATERIA</span><strong id="voltage">16.4 <em>V</em></strong><small>Excelente</small></div>
+          <div class="metric"><span>CORRENTE</span><strong id="current">0.4 <em>A</em></strong></div>
+          <div class="metric"><span>LINK</span><strong id="link">100 <em>%</em></strong></div>
+        </aside>
+      </section>
+
+      <footer>
+        <button id="armButton" class="action primary">ARMAR VEÍCULO</button>
+        <button class="action" id="depthHold">MANTER PROFUNDIDADE</button>
+        <button class="action" id="lights">LUZES <span>OFF</span></button>
+        <button class="action" id="record">● GRAVAR</button>
+      </footer>
+    </main>
+
+    <dialog id="settings">
+      <form method="dialog">
+        <div class="dialog-header"><div><span class="eyebrow">LEAF OS</span><h2>Configuração de vídeo</h2></div><button class="close" value="cancel">×</button></div>
+        <label>Fonte de câmera<select id="cameraSource"><option>USB Camera</option><option>Raspberry Pi CSI</option><option>Capturadora USB</option><option>Câmera IP / RTSP</option></select></label>
+        <div class="form-row"><label>Resolução<select id="cameraResolution"><option>1280x720</option><option>1920x1080</option><option>640x480</option></select></label><label>FPS<select id="cameraFps"><option value="30">30</option><option value="60">60</option><option value="25">25</option></select></label></div>
+        <label>Bitrate (kbps)<input id="cameraBitrate" type="number" min="500" step="100" value="3500" /></label>
+        <p class="note">Nesta versão o painel salva a configuração. A conexão real da câmera e a transmissão WebRTC entrarão no próximo módulo.</p>
+        <button class="action primary save" id="saveCamera" value="default">SALVAR CONFIGURAÇÃO</button>
+      </form>
+    </dialog>
+    <script src="app.js"></script>
+  </body>
+</html>

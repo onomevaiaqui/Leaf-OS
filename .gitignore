@@ -1,0 +1,13 @@
+# Dependências e arquivos locais
+node_modules/
+.env
+.env.*
+
+# Arquivos de desenvolvimento
+.DS_Store
+Thumbs.db
+*.log
+
+# Saídas e arquivos temporários
+work/
+outputs/
