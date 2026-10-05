@@ -24,6 +24,15 @@ function renderStream(nextStream) {
   }
 }
 
+function renderHealth(health) {
+  $('#healthItems').innerHTML = health.components.map((component) => `<div class="health-item ${component.ready ? 'ready' : ''}">${component.label}<small>${component.detail}</small></div>`).join('');
+}
+
+async function refreshHealth() {
+  try { renderHealth(await request('/api/health')); }
+  catch { $('#healthItems').textContent = 'Diagnóstico indisponível.'; }
+}
+
 function render(data) {
   state = data;
   const mavlinkOnline = data.mavlink?.connected === true;
@@ -52,7 +61,8 @@ async function request(url, options) {
   return response.json();
 }
 
-$('#openSettings').addEventListener('click', () => dialog.showModal());
+$('#openSettings').addEventListener('click', () => { dialog.showModal(); refreshHealth(); });
+$('#refreshHealth').addEventListener('click', refreshHealth);
 $('#armButton').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ armed: !state.armed }) })));
 $('#depthHold').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ mode: state.mode === 'ALT_HOLD' ? 'STABILIZE' : 'ALT_HOLD' }) })));
 $('#stream').addEventListener('click', async () => {

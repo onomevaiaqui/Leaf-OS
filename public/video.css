@@ -5,3 +5,6 @@
 .video-panel:has(.webrtc-viewer:not([hidden])) .video-overlay, .video-panel:has(.webrtc-viewer:not([hidden])) .reticle { z-index: 2; }
 .connection.offline { color: #8a6659; }
 .connection.offline i { background: #bc7c69; }
+.health-panel { margin: 4px 0 20px; padding: 14px; border: 1px solid var(--line); border-radius: 4px; background: #f7f9f7; }
+.health-panel > div:first-child { display: inline-grid; gap: 3px; }.health-panel strong { font-size: 13px; }.health-panel .link-button { float: right; margin: 4px 0 0; }
+.health-items { clear: both; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 12px; }.health-item { font-size: 10px; color: #60746c; }.health-item::before { content: '●'; margin-right: 5px; color: #bd7567; }.health-item.ready::before { color: #4b9a5c; }.health-item small { display: block; margin-left: 12px; color: #8a9a94; }

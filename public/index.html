@@ -51,6 +51,7 @@
     <dialog id="settings">
       <form method="dialog">
         <div class="dialog-header"><div><span class="eyebrow">LEAF OS</span><h2>Configuração de vídeo</h2></div><button class="close" value="cancel">×</button></div>
+        <section class="health-panel" aria-label="Diagnóstico do sistema"><div><span class="eyebrow">DIAGNÓSTICO</span><strong>Prontidão do ROV</strong></div><button type="button" class="link-button" id="refreshHealth">ATUALIZAR</button><div id="healthItems" class="health-items">Verificando serviços…</div></section>
         <label>Fonte de câmera<select id="cameraSource"><option value="auto">Detectar automaticamente</option></select></label>
         <div class="camera-add"><span class="eyebrow">ADICIONAR CÂMERA IP</span><div class="form-row"><input id="rtspName" placeholder="Nome (opcional)" /><input id="rtspUrl" placeholder="rtsp://endereço/stream" /></div><button type="button" class="link-button" id="addRtsp">ADICIONAR URL RTSP</button></div>
         <div class="form-row"><label>Resolução<select id="cameraResolution"><option>1280x720</option><option>1920x1080</option><option>640x480</option></select></label><label>FPS<select id="cameraFps"><option value="30">30</option><option value="60">60</option><option value="25">25</option></select></label></div>
