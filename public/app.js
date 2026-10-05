@@ -88,10 +88,14 @@ function render(data) {
   $('#current').innerHTML = `${data.telemetry.current.toFixed(1)} <em>A</em>`;
   $('#link').innerHTML = `${data.telemetry.link} <em>%</em>`;
   $('#resolution').textContent = `${data.camera.resolution.replace('x', '×')} · ${data.camera.fps} FPS`;
-  $('#cameraSource').value = data.camera.source;
-  $('#cameraResolution').value = data.camera.resolution;
-  $('#cameraFps').value = data.camera.fps;
-  $('#cameraBitrate').value = data.camera.bitrate;
+  // A telemetria atualiza a cada segundo. Não sobrescreva uma escolha que o
+  // operador ainda está fazendo dentro do painel de configurações.
+  if (!dialog.open) {
+    $('#cameraSource').value = data.camera.source;
+    $('#cameraResolution').value = data.camera.resolution;
+    $('#cameraFps').value = data.camera.fps;
+    $('#cameraBitrate').value = data.camera.bitrate;
+  }
 }
 
 async function request(url, options) {
