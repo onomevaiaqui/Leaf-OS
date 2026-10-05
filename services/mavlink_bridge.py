@@ -31,7 +31,15 @@ last_sample_at = 0
 
 def snapshot():
     with lock:
-        return json.loads(json.dumps(state))
+        payload = json.loads(json.dumps(state))
+    if payload["lastHeartbeat"]:
+        age = max(0, time.time() - payload["lastHeartbeat"])
+        payload["heartbeatAgeSeconds"] = round(age, 2)
+        payload["connected"] = payload["connected"] and age <= 5
+        payload["telemetry"]["link"] = max(0, round(100 - age * 20))
+    else:
+        payload["heartbeatAgeSeconds"] = None
+    return payload
 
 
 def history_snapshot():
