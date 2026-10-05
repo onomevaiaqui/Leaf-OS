@@ -54,6 +54,10 @@ http.createServer(async (request, response) => {
     return json(response, 200, { ...rov, armed: vehicle.connected ? vehicle.armed : rov.armed, mode: vehicle.connected ? vehicle.mode || rov.mode : rov.mode, telemetry, mavlink: vehicle });
   }
   if (request.method === 'GET' && url.pathname === '/api/telemetry/history') return json(response, 200, await mavlink.getHistory());
+  if (request.method === 'POST' && url.pathname === '/api/mavlink/calibrate-depth') {
+    try { return json(response, 200, await mavlink.calibrateDepth((await readBody(request)).waterDensity)); }
+    catch (error) { return json(response, 400, { error: error.message }); }
+  }
   if (request.method === 'GET' && url.pathname === '/api/health') return json(response, 200, await health.inspect());
   if (request.method === 'GET' && url.pathname === '/api/video/sources') return json(response, 200, { sources: listSources() });
   if (request.method === 'GET' && url.pathname === '/api/video/stream') return json(response, 200, stream.status());

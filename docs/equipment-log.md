@@ -20,3 +20,5 @@ A ausência de um grupo de dados significa que o autopiloto ou o periférico ain
 Ao receber o primeiro heartbeat, o Leaf OS solicita em baixa frequência as mensagens de bateria, saídas PWM e ESC para a Pixhawk. Esse pedido só configura a taxa de telemetria; ele não arma, não muda modo e não envia movimento para os motores.
 
 Os valores de pressão são apresentados em hPa e ainda não equivalem a profundidade. A conversão para metros exige definir a pressão de referência na superfície e a densidade da água usada na operação.
+
+Use o botão **Zerar profundidade na superfície** apenas quando o ROV estiver na superfície e o sensor externo estiver fornecendo dados. O procedimento completo está em [Calibração de profundidade](depth-calibration.md).

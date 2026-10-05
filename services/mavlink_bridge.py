@@ -22,7 +22,7 @@ state = {
     "armed": False,
     "mode": None,
     "telemetry": {"depth": None, "heading": None, "voltage": None, "current": None, "link": None},
-    "equipment": {"battery": {}, "motors": [], "esc": [], "pressure": {}, "messages": []},
+    "equipment": {"battery": {}, "motors": [], "esc": [], "pressure": {}, "depthCalibration": {}, "messages": []},
     "error": None,
 }
 lock = threading.Lock()
@@ -40,12 +40,32 @@ def snapshot():
         payload["telemetry"]["link"] = max(0, round(100 - age * 20))
     else:
         payload["heartbeatAgeSeconds"] = None
+    calibration = payload["equipment"].get("depthCalibration", {})
+    external_pressure = payload["equipment"].get("pressure", {}).get("external", {}).get("absolute")
+    if calibration.get("surfacePressure") is not None and external_pressure is not None:
+        depth = max(0, (external_pressure - calibration["surfacePressure"]) * 100 / (calibration["waterDensity"] * 9.80665))
+        payload["telemetry"]["depth"] = round(depth, 2)
     return payload
 
 
 def history_snapshot():
     with lock:
         return list(history)
+
+
+def calibrate_depth(water_density):
+    if not isinstance(water_density, (int, float)) or not 900 <= water_density <= 1100:
+        raise ValueError("A densidade da água deve estar entre 900 e 1100 kg/m³.")
+    with lock:
+        external = state["equipment"]["pressure"].get("external", {}).get("absolute")
+        if external is None:
+            raise ValueError("O sensor de pressão externo ainda não forneceu dados.")
+        state["equipment"]["depthCalibration"] = {
+            "surfacePressure": external,
+            "waterDensity": water_density,
+            "calibratedAt": time.time(),
+        }
+    return snapshot()
 
 
 def add_sample_if_due():
@@ -204,6 +224,27 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
         self.wfile.write(payload)
+
+    def do_POST(self):
+        if self.path != "/calibrate/depth":
+            self.send_error(404)
+            return
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            body = json.loads(self.rfile.read(length) or b"{}")
+            payload = json.dumps(calibrate_depth(body.get("waterDensity"))).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+        except (ValueError, json.JSONDecodeError) as error:
+            payload = json.dumps({"error": str(error)}).encode("utf-8")
+            self.send_response(400)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
 
     def log_message(self, format, *args):
         return

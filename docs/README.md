@@ -16,6 +16,7 @@ Este diretório é o manual vivo do Leaf OS. Toda nova função precisa atualiza
 | [Arquitetura de registros](logging-architecture.md) | Integrador | Política de logs técnicos e de missão |
 | [Checklist Pre-Dive](pre-dive.md) | Operador | Verificações antes de liberar o armamento |
 | [Política de bateria](battery-safety.md) | Operador | Limite de tensão para o Pre-Dive |
+| [Calibração de profundidade](depth-calibration.md) | Operador | Referência de superfície por pressão externa |
 | [Desenvolvimento](development.md) | Desenvolvedor | Estrutura do código e padrões de contribuição |
 
 ## Situação da versão 0.1

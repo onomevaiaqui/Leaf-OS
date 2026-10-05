@@ -10,7 +10,7 @@ let localStream;
 let activeGamepad;
 let preDiveReleased = false;
 const profileKey = 'leaf-os-vehicle-profile';
-let vehicleProfile = { name: 'Leaf ROV · Unidade 01', minimumVoltage: 0, maximumEscTemperature: 0 };
+let vehicleProfile = { name: 'Leaf ROV · Unidade 01', minimumVoltage: 0, maximumEscTemperature: 0, waterDensity: 1025 };
 try { vehicleProfile = { ...vehicleProfile, ...JSON.parse(localStorage.getItem(profileKey) || '{}') }; } catch { /* usa o padrão */ }
 const mappingKey = 'leaf-os-control-mapping';
 const defaultControlMapping = { surge: 1, sway: 0, heave: 3, yaw: 2 };
@@ -105,6 +105,8 @@ function renderEquipmentLog(data) {
   const pressure = equipment.pressure || {};
   const pressureItems = [['Sensor interno', pressure.internal], ['Sensor externo', pressure.external]].filter(([, value]) => value);
   $('#pressureLog').innerHTML = pressureItems.length ? pressureItems.map(([label, sensor]) => `<div class="equipment-item"><strong>${label}</strong>${number(sensor.absolute, ' hPa')}<br>${number(sensor.temperature, ' °C')}</div>`).join('') : 'Aguardando dados do sensor de pressão.';
+  const calibration = equipment.depthCalibration || {};
+  $('#depthStatus').textContent = calibration.calibratedAt ? `Referência calibrada · Profundidade: ${number(data.telemetry?.depth, ' m')}` : 'Profundidade ainda não calibrada';
   const messages = equipment.messages || [];
   $('#messageLog').innerHTML = messages.length ? messages.slice().reverse().map((message) => `<div class="message-entry">[${escapeHtml(message.severity)}] ${escapeHtml(message.text)}</div>`).join('') : 'Nenhuma mensagem recebida.';
   const alerts = [];
@@ -225,19 +227,29 @@ function render(data) {
     $('#profileName').value = vehicleProfile.name;
     $('#minimumVoltage').value = vehicleProfile.minimumVoltage || '';
     $('#maximumEscTemperature').value = vehicleProfile.maximumEscTemperature || '';
+    $('#waterDensity').value = vehicleProfile.waterDensity || 1025;
   }
   updatePreflight();
 }
 
 async function request(url, options) {
   const response = await fetch(url, options);
-  if (!response.ok) throw new Error('Não foi possível comunicar com o Leaf OS.');
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || 'Não foi possível comunicar com o Leaf OS.');
+  }
   return response.json();
 }
 
 $('#openSettings').addEventListener('click', () => { dialog.showModal(); refreshHealth(); });
 $('#refreshHealth').addEventListener('click', refreshHealth);
 $('#openEquipmentLog').addEventListener('click', () => { equipmentLogDialog.showModal(); refreshHistory(); });
+$('#zeroDepth').addEventListener('click', async () => {
+  try {
+    await request('/api/mavlink/calibrate-depth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ waterDensity: vehicleProfile.waterDensity }) });
+    await refreshStatus();
+  } catch (error) { window.alert(`Não foi possível zerar a profundidade: ${error.message}`); }
+});
 $('#checkTether').addEventListener('change', () => { preDiveReleased = false; updatePreflight(); updateArmButton(); });
 $('#checkSafety').addEventListener('change', () => { preDiveReleased = false; updatePreflight(); updateArmButton(); });
 $('#confirmPreflight').addEventListener('click', (event) => { event.preventDefault(); preDiveReleased = true; updatePreflight(); updateArmButton(); preflightDialog.close(); });
@@ -271,7 +283,7 @@ $('#stream').addEventListener('click', async () => {
 $('#saveCamera').addEventListener('click', async (event) => {
   event.preventDefault();
   const camera = { source: $('#cameraSource').value, resolution: $('#cameraResolution').value, fps: Number($('#cameraFps').value), bitrate: Number($('#cameraBitrate').value) };
-  vehicleProfile = { name: $('#profileName').value.trim() || 'Leaf ROV · Unidade 01', minimumVoltage: Number($('#minimumVoltage').value) || 0, maximumEscTemperature: Number($('#maximumEscTemperature').value) || 0 };
+  vehicleProfile = { name: $('#profileName').value.trim() || 'Leaf ROV · Unidade 01', minimumVoltage: Number($('#minimumVoltage').value) || 0, maximumEscTemperature: Number($('#maximumEscTemperature').value) || 0, waterDensity: Number($('#waterDensity').value) || 1025 };
   localStorage.setItem(profileKey, JSON.stringify(vehicleProfile));
   await request('/api/camera', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify(camera) });
   render(await request('/api/status'));
