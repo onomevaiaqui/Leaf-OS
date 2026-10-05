@@ -4,6 +4,8 @@
 
 O serviço `leaf-mavlink.service` é uma ponte **somente de leitura** entre a Pixhawk e a API local do Leaf OS. Ele lê `HEARTBEAT`, `SYS_STATUS` e `VFR_HUD` usando a biblioteca open source Pymavlink.
 
+Em Windows, a ponte também requer `pyserial`; ela já está incluída em `requirements.txt`.
+
 Campos já encaminhados ao Leaf Ground Control:
 
 - Conexão, modo de voo e estado armado, a partir de `HEARTBEAT`.
