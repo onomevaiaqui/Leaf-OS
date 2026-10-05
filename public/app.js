@@ -1,6 +1,7 @@
 const $ = (selector) => document.querySelector(selector);
 const dialog = $('#settings');
 const controlsDialog = $('#controlsDialog');
+const preflightDialog = $('#preflightDialog');
 let state;
 let sources = [];
 let stream;
@@ -9,6 +10,7 @@ let activeGamepad;
 let telemetryRecording = false;
 let telemetryLog = [];
 let recordingOrigin;
+let preflightConfirmed = false;
 const mappingKey = 'leaf-os-control-mapping';
 const defaultControlMapping = { surge: 1, sway: 0, heave: 3, yaw: 2 };
 let controlMapping = { ...defaultControlMapping };
@@ -108,6 +110,7 @@ function updateGamepad() {
     readout.textContent = 'Conecte um controle USB ou Bluetooth e pressione qualquer botão.';
     readout.className = 'gamepad-readout';
     renderControlSimulation();
+    updatePreflight();
     return;
   }
   const name = activeGamepad.id.replace(/^.*\((.*)\).*$/, '$1').slice(0, 22) || 'CONECTADO';
@@ -117,6 +120,23 @@ function updateGamepad() {
   readout.textContent = `${name} · Eixos: ${axes || '—'} · Botões pressionados: ${pressed}`;
   readout.className = 'gamepad-readout connected';
   renderControlSimulation(activeGamepad);
+  updatePreflight();
+}
+
+function updatePreflight() {
+  if (!state) return;
+  const checks = [
+    ['Comunicação MAVLink com a Pixhawk', state.mavlink?.connected === true],
+    ['Telemetria de bateria disponível', Number.isFinite(state.telemetry?.voltage)],
+    ['Joystick conectado', Boolean(activeGamepad)],
+  ];
+  $('#preflightAutomatic').innerHTML = checks.map(([label, ready]) => `<div class="preflight-item ${ready ? 'ready' : ''}">${label}: ${ready ? 'pronto' : 'pendente'}</div>`).join('');
+  const manualReady = $('#checkTether').checked && $('#checkSafety').checked;
+  const ready = checks.every(([, itemReady]) => itemReady) && manualReady;
+  $('#confirmPreflight').disabled = !ready;
+  $('#preflightButton').classList.toggle('ready', ready || preflightConfirmed);
+  $('#preflightButton').textContent = preflightConfirmed ? 'PRÉ-VOO: CONFIRMADO' : 'PRÉ-VOO';
+  $('#preflightMessage').textContent = preflightConfirmed ? 'Pré-voo confirmado para esta sessão.' : ready ? 'Todos os itens estão prontos para confirmação.' : 'Conclua os itens pendentes para liberar a confirmação.';
 }
 
 function mappedAxis(gamepad, action) {
@@ -204,6 +224,7 @@ function render(data) {
     $('#cameraFps').value = data.camera.fps;
     $('#cameraBitrate').value = data.camera.bitrate;
   }
+  updatePreflight();
 }
 
 async function request(url, options) {
@@ -214,6 +235,10 @@ async function request(url, options) {
 
 $('#openSettings').addEventListener('click', () => { dialog.showModal(); refreshHealth(); });
 $('#refreshHealth').addEventListener('click', refreshHealth);
+$('#preflightButton').addEventListener('click', () => { preflightDialog.showModal(); updatePreflight(); });
+$('#checkTether').addEventListener('change', () => { preflightConfirmed = false; updatePreflight(); });
+$('#checkSafety').addEventListener('change', () => { preflightConfirmed = false; updatePreflight(); });
+$('#confirmPreflight').addEventListener('click', (event) => { event.preventDefault(); preflightConfirmed = true; updatePreflight(); preflightDialog.close(); });
 $('#openControls').addEventListener('click', () => { populateMappingControls(); controlsDialog.showModal(); });
 $('#saveControls').addEventListener('click', (event) => {
   event.preventDefault();

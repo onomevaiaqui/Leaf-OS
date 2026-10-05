@@ -14,6 +14,7 @@ Este diretório é o manual vivo do Leaf OS. Toda nova função precisa atualiza
 | [Joystick](joystick.md) | Operador | Teste de controles e plano de mapeamento seguro |
 | [Registro de telemetria](telemetry-logs.md) | Operador | Exportação segura de sessões em CSV |
 | [Arquitetura de registros](logging-architecture.md) | Integrador | Política de logs técnicos e de missão |
+| [Checklist de pré-voo](preflight.md) | Operador | Verificações antes da operação |
 | [Desenvolvimento](development.md) | Desenvolvedor | Estrutura do código e padrões de contribuição |
 
 ## Situação da versão 0.1
