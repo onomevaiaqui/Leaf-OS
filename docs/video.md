@@ -16,6 +16,11 @@ Essa separação permite receber uma câmera que entregue MJPEG ou vídeo bruto 
 | Capturadora USB analógica | Suportada se exposta como V4L2 | Use a mesma seleção de webcam |
 | Câmera CSI | Detectada | Pipeline dedicado será adicionado |
 | Câmera IP/RTSP | Cadastro persistente | Pipeline dedicado será adicionado |
+| Webcam do computador de superfície | Teste local no navegador | Não representa o fluxo embarcado do ROV |
+
+## Teste local sem Raspberry Pi
+
+No Leaf Ground Control aberto em `http://localhost:8080`, selecione **Webcam deste computador (teste)** nas configurações, salve e clique em **Iniciar vídeo**. Autorize o navegador quando ele pedir acesso à câmera. Esse modo é útil para validar a interface, resolução e visualização; ele não transmite a webcam pelo tether e não usa MediaMTX.
 
 ## Problemas comuns
 

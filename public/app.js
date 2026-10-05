@@ -3,11 +3,12 @@ const dialog = $('#settings');
 let state;
 let sources = [];
 let stream;
+let localStream;
 
 function setSources(nextSources) {
   sources = nextSources;
   const select = $('#cameraSource');
-  select.innerHTML = '<option value="auto">Detectar automaticamente</option>' + sources.map((source) => `<option value="${source.id}">${source.name}</option>`).join('');
+  select.innerHTML = '<option value="auto">Detectar automaticamente</option><option value="browser:local">Webcam deste computador (teste)</option>' + sources.map((source) => `<option value="${source.id}">${source.name}</option>`).join('');
   select.value = state?.camera.source || 'auto';
 }
 
@@ -16,12 +17,30 @@ function renderStream(nextStream) {
   $('#stream').textContent = stream.running ? 'PARAR VÍDEO' : 'INICIAR VÍDEO';
   const viewer = $('#webrtcViewer');
   if (stream.running) {
+    stopLocalPreview();
     viewer.src = `http://${window.location.hostname}:8889/${stream.streamPath}`;
     viewer.hidden = false;
   } else {
     viewer.removeAttribute('src');
     viewer.hidden = true;
   }
+}
+
+async function startLocalPreview() {
+  if (!navigator.mediaDevices?.getUserMedia) throw new Error('Este navegador não permite acesso à webcam.');
+  localStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }, audio: false });
+  const viewer = $('#localViewer');
+  viewer.srcObject = localStream;
+  viewer.hidden = false;
+  $('#stream').textContent = 'PARAR WEBCAM';
+}
+
+function stopLocalPreview() {
+  if (localStream) localStream.getTracks().forEach((track) => track.stop());
+  localStream = undefined;
+  const viewer = $('#localViewer');
+  viewer.srcObject = null;
+  viewer.hidden = true;
 }
 
 function renderHealth(health) {
@@ -86,7 +105,14 @@ $('#refreshHealth').addEventListener('click', refreshHealth);
 $('#armButton').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ armed: !state.armed }) })));
 $('#depthHold').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ mode: state.mode === 'ALT_HOLD' ? 'STABILIZE' : 'ALT_HOLD' }) })));
 $('#stream').addEventListener('click', async () => {
-  try { renderStream(await request(stream?.running ? '/api/video/stream/stop' : '/api/video/stream/start', { method: 'POST' })); }
+  try {
+    if (state.camera.source === 'browser:local') {
+      if (localStream) stopLocalPreview(); else await startLocalPreview();
+      if (!localStream) $('#stream').textContent = 'INICIAR VÍDEO';
+      return;
+    }
+    renderStream(await request(stream?.running ? '/api/video/stream/stop' : '/api/video/stream/start', { method: 'POST' }));
+  }
   catch (error) { window.alert(error.message); }
 });
 $('#saveCamera').addEventListener('click', async (event) => { event.preventDefault(); const camera = { source: $('#cameraSource').value, resolution: $('#cameraResolution').value, fps: Number($('#cameraFps').value), bitrate: Number($('#cameraBitrate').value) }; await request('/api/camera', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify(camera) }); render(await request('/api/status')); dialog.close(); });

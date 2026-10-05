@@ -4,7 +4,7 @@
 
 ## 1. Verificação no computador
 
-Na pasta do projeto, execute `npm start` e abra `http://localhost:8080`. A tela deve abrir mesmo sem hardware. É esperado que o cabeçalho informe **Pixhawk desconectada** e que o diagnóstico indique componentes do Raspberry indisponíveis.
+Na pasta do projeto, execute `npm start` e abra `http://localhost:8080`. A tela deve abrir mesmo sem hardware. É esperado que o cabeçalho informe **Pixhawk desconectada** e que o diagnóstico indique componentes do Raspberry indisponíveis. Para testar uma webcam conectada ao computador, escolha **Webcam deste computador (teste)** nas configurações e clique em **Iniciar vídeo**.
 
 ## 2. Preparar o Raspberry Pi
 

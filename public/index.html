@@ -28,6 +28,7 @@
         </aside>
         <section class="video-panel" aria-label="Câmera do ROV">
           <div class="video-placeholder"><div class="seafloor"></div><span>AGUARDANDO FLUXO DE VÍDEO</span><small>Leaf OS Video · WebRTC será conectado aqui</small></div>
+          <video id="localViewer" class="local-viewer" autoplay playsinline muted hidden></video>
           <iframe id="webrtcViewer" class="webrtc-viewer" title="Vídeo ao vivo do ROV" allow="autoplay; fullscreen" hidden></iframe>
           <div class="video-overlay"><span>CAM 01</span><span id="resolution">1280×720 · 30 FPS</span></div>
           <div class="reticle"></div>
@@ -62,7 +63,7 @@
         <div class="camera-add"><span class="eyebrow">ADICIONAR CÂMERA IP</span><div class="form-row"><input id="rtspName" placeholder="Nome (opcional)" /><input id="rtspUrl" placeholder="rtsp://endereço/stream" /></div><button type="button" class="link-button" id="addRtsp">ADICIONAR URL RTSP</button></div>
         <div class="form-row"><label>Resolução<select id="cameraResolution"><option>1280x720</option><option>1920x1080</option><option>640x480</option></select></label><label>FPS<select id="cameraFps"><option value="30">30</option><option value="60">60</option><option value="25">25</option></select></label></div>
         <label>Bitrate (kbps)<input id="cameraBitrate" type="number" min="500" step="100" value="3500" /></label>
-        <p class="note">Nesta versão o painel salva a configuração. A conexão real da câmera e a transmissão WebRTC entrarão no próximo módulo.</p>
+        <p class="note">A webcam conectada a este computador pode ser testada agora. Câmeras do ROV usam o pipeline GStreamer + MediaMTX no Raspberry.</p>
         <button class="action primary save" id="saveCamera" value="default">SALVAR CONFIGURAÇÃO</button>
       </form>
     </dialog>
