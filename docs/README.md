@@ -12,7 +12,7 @@ Este diretório é o manual vivo do Leaf OS. Toda nova função precisa atualiza
 | [Diagnóstico](diagnostics.md) | Operador e integrador | Verificação de prontidão antes da operação |
 | [Teste de bancada](bench-test.md) | Integrador | Primeiro teste seguro com Raspberry, câmera e Pixhawk |
 | [Joystick](joystick.md) | Operador | Teste de controles e plano de mapeamento seguro |
-| [Registro de telemetria](telemetry-logs.md) | Operador | Exportação segura de sessões em CSV |
+| [Log do equipamento](equipment-log.md) | Operador | Bateria, motores, ESCs e mensagens MAVLink |
 | [Arquitetura de registros](logging-architecture.md) | Integrador | Política de logs técnicos e de missão |
 | [Checklist Pre-Dive](pre-dive.md) | Operador | Verificações antes de liberar o armamento |
 | [Política de bateria](battery-safety.md) | Operador | Limite de tensão para o Pre-Dive |

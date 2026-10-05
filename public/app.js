@@ -2,14 +2,12 @@ const $ = (selector) => document.querySelector(selector);
 const dialog = $('#settings');
 const controlsDialog = $('#controlsDialog');
 const preflightDialog = $('#preflightDialog');
+const equipmentLogDialog = $('#equipmentLogDialog');
 let state;
 let sources = [];
 let stream;
 let localStream;
 let activeGamepad;
-let telemetryRecording = false;
-let telemetryLog = [];
-let recordingOrigin;
 let preDiveReleased = false;
 const profileKey = 'leaf-os-vehicle-profile';
 let vehicleProfile = { name: 'Leaf ROV · Unidade 01', minimumVoltage: 0 };
@@ -85,12 +83,33 @@ function renderHistory(history) {
   $('#voltageLine').setAttribute('points', points);
 }
 
+function escapeHtml(value) {
+  return String(value ?? '—').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+}
+
+function renderEquipmentLog(data) {
+  const mavlink = data.mavlink || {};
+  const equipment = mavlink.equipment || {};
+  const battery = equipment.battery || {};
+  const number = (value, suffix = '') => Number.isFinite(value) ? `${value}${suffix}` : '—';
+  $('#equipmentSummary').innerHTML = [
+    ['BATERIA', number(data.telemetry?.voltage, ' V')],
+    ['CORRENTE', number(data.telemetry?.current, ' A')],
+    ['LINK', number(data.telemetry?.link, '%')],
+    ['CARGA', number(battery.remaining, '%')],
+  ].map(([label, value]) => `<div class="equipment-card"><span>${label}</span><strong>${value}</strong></div>`).join('');
+  const motors = equipment.motors || [];
+  $('#motorLog').innerHTML = motors.length ? motors.map((motor) => `<div class="equipment-item"><strong>Saída ${motor.channel}</strong>${escapeHtml(motor.pwm)} µs</div>`).join('') : 'Aguardando saídas PWM da Pixhawk.';
+  const escs = equipment.esc || [];
+  $('#escLog').innerHTML = escs.length ? escs.map((esc) => `<div class="equipment-item"><strong>ESC ${esc.index}</strong>${number(esc.rpm, ' RPM')}<br>${number(esc.temperature, ' °C')} · ${number(esc.current, ' A')}</div>`).join('') : 'Aguardando dados de ESC.';
+  const messages = equipment.messages || [];
+  $('#messageLog').innerHTML = messages.length ? messages.slice().reverse().map((message) => `<div class="message-entry">[${escapeHtml(message.severity)}] ${escapeHtml(message.text)}</div>`).join('') : 'Nenhuma mensagem recebida.';
+}
+
 async function refreshStatus() {
   try {
     const status = await request('/api/status');
     render(status);
-    handleMissionRecording(status);
-    if (telemetryRecording) telemetryLog.push({ timestamp: new Date().toISOString(), ...status });
   } catch (error) { console.error(error); }
 }
 
@@ -163,47 +182,6 @@ function renderControlSimulation(gamepad) {
   });
 }
 
-function downloadTelemetryLog() {
-  const heading = ['timestamp', 'pixhawk_connected', 'armed', 'mode', 'depth_m', 'heading_deg', 'voltage_v', 'current_a', 'link_percent'];
-  const rows = telemetryLog.map((entry) => [
-    entry.timestamp,
-    entry.mavlink?.connected === true,
-    entry.armed,
-    entry.mode,
-    entry.telemetry.depth,
-    entry.telemetry.heading,
-    entry.telemetry.voltage,
-    entry.telemetry.current,
-    entry.telemetry.link,
-  ].map((value) => JSON.stringify(value ?? '')).join(','));
-  const file = new Blob([[heading.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(file);
-  link.download = `leaf-os-telemetria-${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
-  link.click();
-  URL.revokeObjectURL(link.href);
-}
-
-function startTelemetryRecording(origin) {
-  telemetryLog = [];
-  telemetryRecording = true;
-  recordingOrigin = origin;
-  $('#record').textContent = origin === 'auto' ? '● MISSÃO EM REGISTRO' : '■ PARAR E EXPORTAR';
-}
-
-function stopTelemetryRecording() {
-  telemetryRecording = false;
-  recordingOrigin = undefined;
-  $('#record').textContent = '● GRAVAR TELEMETRIA';
-  if (telemetryLog.length) downloadTelemetryLog();
-}
-
-function handleMissionRecording(status) {
-  const armed = status.mavlink?.connected === true && status.armed === true;
-  if (armed && !telemetryRecording) startTelemetryRecording('auto');
-  if (!armed && telemetryRecording && recordingOrigin === 'auto') stopTelemetryRecording();
-}
-
 async function refreshHealth() {
   try { renderHealth(await request('/api/health')); }
   catch { $('#healthItems').textContent = 'Diagnóstico indisponível.'; }
@@ -226,6 +204,7 @@ function render(data) {
   $('#link').innerHTML = `${data.telemetry.link} <em>%</em>`;
   $('#resolution').textContent = `${data.camera.resolution.replace('x', '×')} · ${data.camera.fps} FPS`;
   $('#vehicleName').textContent = vehicleProfile.name;
+  renderEquipmentLog(data);
   // A telemetria atualiza a cada segundo. Não sobrescreva uma escolha que o
   // operador ainda está fazendo dentro do painel de configurações.
   if (!dialog.open) {
@@ -247,6 +226,7 @@ async function request(url, options) {
 
 $('#openSettings').addEventListener('click', () => { dialog.showModal(); refreshHealth(); });
 $('#refreshHealth').addEventListener('click', refreshHealth);
+$('#openEquipmentLog').addEventListener('click', () => { equipmentLogDialog.showModal(); refreshHistory(); });
 $('#checkTether').addEventListener('change', () => { preDiveReleased = false; updatePreflight(); updateArmButton(); });
 $('#checkSafety').addEventListener('change', () => { preDiveReleased = false; updatePreflight(); updateArmButton(); });
 $('#confirmPreflight').addEventListener('click', (event) => { event.preventDefault(); preDiveReleased = true; updatePreflight(); updateArmButton(); preflightDialog.close(); });
@@ -263,17 +243,6 @@ $('#armButton').addEventListener('click', async () => {
   window.alert('Pre-Dive liberado. O comando físico de armar/desarmar continua bloqueado nesta fase de validação MAVLink.');
 });
 $('#depthHold').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ mode: state.mode === 'ALT_HOLD' ? 'STABILIZE' : 'ALT_HOLD' }) })));
-$('#record').addEventListener('click', () => {
-  if (telemetryRecording && recordingOrigin === 'auto') {
-    window.alert('O registro desta missão é automático e será exportado quando a Pixhawk desarmar.');
-    return;
-  }
-  if (telemetryRecording) {
-    stopTelemetryRecording();
-    return;
-  }
-  startTelemetryRecording('manual');
-});
 $('#stream').addEventListener('click', async () => {
   try {
     if (state.camera.source === 'browser:local') {
@@ -306,7 +275,7 @@ $('#addRtsp').addEventListener('click', async () => {
   $('#rtspName').value = '';
   $('#rtspUrl').value = '';
 });
-Promise.all([request('/api/status'), request('/api/video/sources'), request('/api/video/stream')]).then(([data, video, activeStream]) => { render(data); handleMissionRecording(data); setSources(video.sources); renderStream(activeStream); }).catch(console.error);
+Promise.all([request('/api/status'), request('/api/video/sources'), request('/api/video/stream')]).then(([data, video, activeStream]) => { render(data); setSources(video.sources); renderStream(activeStream); }).catch(console.error);
 setInterval(refreshStatus, 1000);
 setInterval(refreshHistory, 5000);
 setInterval(updateGamepad, 100);

@@ -22,6 +22,7 @@ state = {
     "armed": False,
     "mode": None,
     "telemetry": {"depth": None, "heading": None, "voltage": None, "current": None, "link": None},
+    "equipment": {"battery": {}, "motors": [], "esc": [], "messages": []},
     "error": None,
 }
 lock = threading.Lock()
@@ -71,8 +72,54 @@ def update_from_message(master, message):
                 state["telemetry"]["voltage"] = round(message.voltage_battery / 1000, 2)
             if message.current_battery >= 0:
                 state["telemetry"]["current"] = round(message.current_battery / 100, 2)
+            state["equipment"]["battery"] = {
+                "voltage": state["telemetry"]["voltage"],
+                "current": state["telemetry"]["current"],
+                "remaining": getattr(message, "battery_remaining", None),
+                "source": "SYS_STATUS",
+            }
         elif message_type == "VFR_HUD":
             state["telemetry"]["heading"] = message.heading
+        elif message_type == "BATTERY_STATUS":
+            voltages = [value / 1000 for value in getattr(message, "voltages", []) if value not in (0, 65535)]
+            state["equipment"]["battery"] = {
+                "voltage": round(sum(voltages), 2) if voltages else state["telemetry"]["voltage"],
+                "cells": [round(value, 3) for value in voltages],
+                "current": round(message.current_battery / 100, 2) if getattr(message, "current_battery", -1) >= 0 else None,
+                "remaining": getattr(message, "battery_remaining", None),
+                "temperature": round(message.temperature / 100, 1) if getattr(message, "temperature", 0) not in (0, 32767) else None,
+                "source": "BATTERY_STATUS",
+            }
+            state["telemetry"]["voltage"] = state["equipment"]["battery"]["voltage"]
+            state["telemetry"]["current"] = state["equipment"]["battery"]["current"]
+        elif message_type == "SERVO_OUTPUT_RAW":
+            outputs = []
+            for channel in range(1, 17):
+                value = getattr(message, f"servo{channel}_raw", None)
+                if value is not None:
+                    outputs.append({"channel": channel, "pwm": value})
+            state["equipment"]["motors"] = outputs
+        elif message_type == "ESC_STATUS":
+            temperatures = list(getattr(message, "temperature", []))
+            rpms = list(getattr(message, "rpm", []))
+            voltages = list(getattr(message, "voltage", []))
+            currents = list(getattr(message, "current", []))
+            escs = []
+            for index in range(max(len(temperatures), len(rpms), len(voltages), len(currents))):
+                escs.append({
+                    "index": index + 1,
+                    "rpm": rpms[index] if index < len(rpms) else None,
+                    "temperature": round(temperatures[index] / 100, 1) if index < len(temperatures) and temperatures[index] else None,
+                    "voltage": round(voltages[index] / 100, 2) if index < len(voltages) and voltages[index] else None,
+                    "current": round(currents[index] / 100, 2) if index < len(currents) and currents[index] else None,
+                })
+            state["equipment"]["esc"] = escs
+        elif message_type == "STATUSTEXT":
+            text = getattr(message, "text", "")
+            if isinstance(text, bytes):
+                text = text.decode("utf-8", errors="replace")
+            state["equipment"]["messages"].append({"timestamp": time.time(), "severity": getattr(message, "severity", None), "text": str(text).rstrip("\x00")})
+            state["equipment"]["messages"] = state["equipment"]["messages"][-50:]
 
 
 def mavlink_loop():

@@ -17,12 +17,11 @@ Abra as configurações e verifique a seção **Prontidão do ROV**. Ela indica 
 - **Vídeo**: área central de visão do ROV. Quando o pipeline e o MediaMTX estão ativos, o Leaf Ground Control abre automaticamente o leitor WebRTC embutido nessa área.
 - **Profundidade / rumo**: rumo passa a vir da Pixhawk quando a ponte MAVLink estiver conectada. Profundidade ainda é simulada.
 - **Bateria / corrente / link**: tensão e corrente passam a vir da Pixhawk quando a ponte MAVLink estiver conectada. O link reflete a idade dos heartbeats MAVLink e indica desconexão após cinco segundos sem atualização.
-- **Histórico MAVLink**: o gráfico abaixo do vídeo mostra a tensão recebida da Pixhawk nos últimos minutos. Ele reinicia quando a ponte MAVLink é reiniciada.
+- **Log do equipamento**: dentro da engrenagem, mostra histórico de bateria, link, motores, ESCs e mensagens MAVLink. Os dados disponíveis dependem dos componentes conectados e das mensagens publicadas pela Pixhawk.
 - **Configurações**: escolha câmera, resolução, FPS e bitrate, ou cadastre uma URL RTSP.
 - **Iniciar vídeo**: inicia a captura USB selecionada no Raspberry. Use novamente para parar.
 - **Controle**: a barra inferior indica se o joystick está conectado e mostra seus eixos. Nesta versão, ele ainda não movimenta o ROV.
 - **Resposta do joystick**: o quadro de simulação mostra os quatro movimentos configurados. Use **Configurar eixos** para adaptar o layout ao seu controle.
-- **Gravar telemetria**: inicia o registro local da sessão; ao parar, o navegador baixa um CSV com os dados coletados.
 - **Armar / Pre-Dive**: ao clicar em armar, o checklist Pre-Dive combina estado da Pixhawk, bateria, joystick e confirmações manuais. Após a liberação, o comando físico ainda permanece bloqueado nesta versão.
 
 ## Segurança
