@@ -24,4 +24,4 @@ Câmera USB / CSI / IP ─ Leaf OS Video ── WebRTC ────── navega
 | Leaf OS Video | Descoberta de câmeras e controle de pipeline | Funcional para USB/V4L2 no Raspberry |
 | MediaMTX | Roteamento RTSP e entrega WebRTC | Instalação externa necessária |
 | Leaf Ground Control | Tela de operação no navegador | Protótipo funcional |
-| Leaf OS MAVLink | Comunicação segura com Pixhawk | Planejado |
+| Leaf OS MAVLink | Leitura inicial de telemetria da Pixhawk | Em desenvolvimento |

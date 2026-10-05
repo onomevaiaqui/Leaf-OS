@@ -6,6 +6,7 @@
 server.js        API HTTP e arquivos estáticos
 lib/video.js     descoberta e cadastro de fontes de vídeo
 lib/stream.js    ciclo de vida do pipeline GStreamer
+services/        processos isolados, incluindo a ponte MAVLink em Python
 public/          Leaf Ground Control
 deploy/          arquivos de serviço e MediaMTX
 scripts/         instalação no Raspberry

@@ -1,0 +1,15 @@
+[Unit]
+Description=Leaf OS read-only MAVLink bridge
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/leaf-os
+ExecStart=/opt/leaf-os/.venv/bin/python /opt/leaf-os/services/mavlink_bridge.py
+Restart=always
+RestartSec=2
+Environment=PIXHAWK_CONNECTION=/dev/ttyACM0
+Environment=PIXHAWK_BAUD=115200
+
+[Install]
+WantedBy=multi-user.target

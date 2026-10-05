@@ -4,6 +4,7 @@ const path = require('node:path');
 const { URL } = require('node:url');
 const { addRtspSource, listSources } = require('./lib/video');
 const stream = require('./lib/stream');
+const mavlink = require('./lib/mavlink-client');
 
 const port = Number(process.env.PORT || 8080);
 const publicDirectory = path.join(__dirname, 'public');
@@ -45,7 +46,12 @@ function serveStatic(response, pathname) {
 
 http.createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
-  if (request.method === 'GET' && url.pathname === '/api/status') return json(response, 200, rov);
+  if (request.method === 'GET' && url.pathname === '/api/status') {
+    const vehicle = await mavlink.getStatus();
+    const telemetry = { ...rov.telemetry };
+    for (const [key, value] of Object.entries(vehicle.telemetry || {})) if (Number.isFinite(value)) telemetry[key] = value;
+    return json(response, 200, { ...rov, armed: vehicle.connected ? vehicle.armed : rov.armed, mode: vehicle.connected ? vehicle.mode || rov.mode : rov.mode, telemetry, mavlink: vehicle });
+  }
   if (request.method === 'GET' && url.pathname === '/api/video/sources') return json(response, 200, { sources: listSources() });
   if (request.method === 'GET' && url.pathname === '/api/video/stream') return json(response, 200, stream.status());
   if (request.method === 'POST' && url.pathname === '/api/video/stream/start') {

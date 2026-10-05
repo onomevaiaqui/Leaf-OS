@@ -8,8 +8,9 @@ Este diretório é o manual vivo do Leaf OS. Toda nova função precisa atualiza
 | [Instalação no Raspberry Pi](installation-raspberry-pi.md) | Integrador | Preparação do cartão, rede e serviços |
 | [Manual do operador](operator-manual.md) | Piloto do ROV | Uso do Leaf Ground Control |
 | [Vídeo e câmeras](video.md) | Integrador | Tipos de câmeras, configuração e diagnóstico |
+| [MAVLink e Pixhawk](mavlink.md) | Integrador | Ligação serial, telemetria e limites de segurança |
 | [Desenvolvimento](development.md) | Desenvolvedor | Estrutura do código e padrões de contribuição |
 
 ## Situação da versão 0.1
 
-O Leaf OS já tem a interface de superfície, descoberta de fontes USB no Linux, cadastro RTSP e o pipeline configurável GStreamer + MediaMTX. Telemetria e comandos da Pixhawk ainda são simulados; nunca opere um ROV real usando os botões da versão 0.1.
+O Leaf OS já tem a interface de superfície, descoberta de fontes USB no Linux, cadastro RTSP, pipeline configurável GStreamer + MediaMTX e leitura MAVLink inicial. Os comandos da Pixhawk ainda são simulados; nunca opere um ROV real usando os botões da versão 0.1.

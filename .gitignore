@@ -13,3 +13,5 @@ work/
 outputs/
 data/
 recordings/
+__pycache__/
+*.pyc
