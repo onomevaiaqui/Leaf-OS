@@ -11,6 +11,7 @@ Este diretório é o manual vivo do Leaf OS. Toda nova função precisa atualiza
 | [MAVLink e Pixhawk](mavlink.md) | Integrador | Ligação serial, telemetria e limites de segurança |
 | [Diagnóstico](diagnostics.md) | Operador e integrador | Verificação de prontidão antes da operação |
 | [Teste de bancada](bench-test.md) | Integrador | Primeiro teste seguro com Raspberry, câmera e Pixhawk |
+| [Joystick](joystick.md) | Operador | Teste de controles e plano de mapeamento seguro |
 | [Desenvolvimento](development.md) | Desenvolvedor | Estrutura do código e padrões de contribuição |
 
 ## Situação da versão 0.1

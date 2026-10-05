@@ -4,6 +4,7 @@ let state;
 let sources = [];
 let stream;
 let localStream;
+let activeGamepad;
 
 function setSources(nextSources) {
   sources = nextSources;
@@ -68,6 +69,30 @@ async function refreshStatus() {
 
 async function refreshHistory() {
   try { renderHistory(await request('/api/telemetry/history')); } catch (error) { console.error(error); }
+}
+
+function formatAxis(value) {
+  const deadzone = Math.abs(value) < 0.08 ? 0 : value;
+  return deadzone.toFixed(2);
+}
+
+function updateGamepad() {
+  const pads = navigator.getGamepads?.() || [];
+  activeGamepad = [...pads].find((pad) => pad?.connected);
+  const button = $('#gamepadButton');
+  const readout = $('#gamepadReadout');
+  if (!activeGamepad) {
+    button.textContent = 'CONTROLE: DESCONECTADO';
+    readout.textContent = 'Conecte um controle USB ou Bluetooth e pressione qualquer botão.';
+    readout.className = 'gamepad-readout';
+    return;
+  }
+  const name = activeGamepad.id.replace(/^.*\((.*)\).*$/, '$1').slice(0, 22) || 'CONECTADO';
+  const axes = activeGamepad.axes.slice(0, 4).map(formatAxis).join(' · ');
+  const pressed = activeGamepad.buttons.reduce((total, item) => total + (item.pressed ? 1 : 0), 0);
+  button.textContent = 'CONTROLE: CONECTADO';
+  readout.textContent = `${name} · Eixos: ${axes || '—'} · Botões pressionados: ${pressed}`;
+  readout.className = 'gamepad-readout connected';
 }
 
 async function refreshHealth() {
@@ -138,4 +163,8 @@ $('#addRtsp').addEventListener('click', async () => {
 Promise.all([request('/api/status'), request('/api/video/sources'), request('/api/video/stream')]).then(([data, video, activeStream]) => { render(data); setSources(video.sources); renderStream(activeStream); }).catch(console.error);
 setInterval(refreshStatus, 1000);
 setInterval(refreshHistory, 5000);
+setInterval(updateGamepad, 100);
+window.addEventListener('gamepadconnected', updateGamepad);
+window.addEventListener('gamepaddisconnected', updateGamepad);
 refreshHistory();
+updateGamepad();

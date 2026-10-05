@@ -20,6 +20,7 @@ Abra as configurações e verifique a seção **Prontidão do ROV**. Ela indica 
 - **Histórico MAVLink**: o gráfico abaixo do vídeo mostra a tensão recebida da Pixhawk nos últimos minutos. Ele reinicia quando a ponte MAVLink é reiniciada.
 - **Configurações**: escolha câmera, resolução, FPS e bitrate, ou cadastre uma URL RTSP.
 - **Iniciar vídeo**: inicia a captura USB selecionada no Raspberry. Use novamente para parar.
+- **Controle**: a barra inferior indica se o joystick está conectado e mostra seus eixos. Nesta versão, ele ainda não movimenta o ROV.
 
 ## Segurança
 
