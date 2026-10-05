@@ -8,6 +8,7 @@ let localStream;
 let activeGamepad;
 let telemetryRecording = false;
 let telemetryLog = [];
+let recordingOrigin;
 const mappingKey = 'leaf-os-control-mapping';
 const defaultControlMapping = { surge: 1, sway: 0, heave: 3, yaw: 2 };
 let controlMapping = { ...defaultControlMapping };
@@ -83,6 +84,7 @@ async function refreshStatus() {
   try {
     const status = await request('/api/status');
     render(status);
+    handleMissionRecording(status);
     if (telemetryRecording) telemetryLog.push({ timestamp: new Date().toISOString(), ...status });
   } catch (error) { console.error(error); }
 }
@@ -153,6 +155,26 @@ function downloadTelemetryLog() {
   URL.revokeObjectURL(link.href);
 }
 
+function startTelemetryRecording(origin) {
+  telemetryLog = [];
+  telemetryRecording = true;
+  recordingOrigin = origin;
+  $('#record').textContent = origin === 'auto' ? '● MISSÃO EM REGISTRO' : '■ PARAR E EXPORTAR';
+}
+
+function stopTelemetryRecording() {
+  telemetryRecording = false;
+  recordingOrigin = undefined;
+  $('#record').textContent = '● GRAVAR TELEMETRIA';
+  if (telemetryLog.length) downloadTelemetryLog();
+}
+
+function handleMissionRecording(status) {
+  const armed = status.mavlink?.connected === true && status.armed === true;
+  if (armed && !telemetryRecording) startTelemetryRecording('auto');
+  if (!armed && telemetryRecording && recordingOrigin === 'auto') stopTelemetryRecording();
+}
+
 async function refreshHealth() {
   try { renderHealth(await request('/api/health')); }
   catch { $('#healthItems').textContent = 'Diagnóstico indisponível.'; }
@@ -203,15 +225,15 @@ $('#saveControls').addEventListener('click', (event) => {
 $('#armButton').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ armed: !state.armed }) })));
 $('#depthHold').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ mode: state.mode === 'ALT_HOLD' ? 'STABILIZE' : 'ALT_HOLD' }) })));
 $('#record').addEventListener('click', () => {
-  if (telemetryRecording) {
-    telemetryRecording = false;
-    $('#record').textContent = '● GRAVAR TELEMETRIA';
-    if (telemetryLog.length) downloadTelemetryLog();
+  if (telemetryRecording && recordingOrigin === 'auto') {
+    window.alert('O registro desta missão é automático e será exportado quando a Pixhawk desarmar.');
     return;
   }
-  telemetryLog = [];
-  telemetryRecording = true;
-  $('#record').textContent = '■ PARAR E EXPORTAR';
+  if (telemetryRecording) {
+    stopTelemetryRecording();
+    return;
+  }
+  startTelemetryRecording('manual');
 });
 $('#stream').addEventListener('click', async () => {
   try {
@@ -237,7 +259,7 @@ $('#addRtsp').addEventListener('click', async () => {
   $('#rtspName').value = '';
   $('#rtspUrl').value = '';
 });
-Promise.all([request('/api/status'), request('/api/video/sources'), request('/api/video/stream')]).then(([data, video, activeStream]) => { render(data); setSources(video.sources); renderStream(activeStream); }).catch(console.error);
+Promise.all([request('/api/status'), request('/api/video/sources'), request('/api/video/stream')]).then(([data, video, activeStream]) => { render(data); handleMissionRecording(data); setSources(video.sources); renderStream(activeStream); }).catch(console.error);
 setInterval(refreshStatus, 1000);
 setInterval(refreshHistory, 5000);
 setInterval(updateGamepad, 100);
