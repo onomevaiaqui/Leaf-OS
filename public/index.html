@@ -47,8 +47,7 @@
       </section>
 
       <footer>
-        <button id="armButton" class="action primary">ARMAR VEÍCULO</button>
-        <button class="action" id="preflightButton">PRÉ-VOO</button>
+        <button id="armButton" class="action primary">ARMAR · PRE-DIVE</button>
         <button class="action" id="gamepadButton">CONTROLE: DESCONECTADO</button>
         <button class="action" id="depthHold">MANTER PROFUNDIDADE</button>
         <button class="action" id="lights">LUZES <span>OFF</span></button>
@@ -95,13 +94,13 @@
     </dialog>
     <dialog id="preflightDialog">
       <form method="dialog">
-        <div class="dialog-header"><div><span class="eyebrow">LEAF GROUND CONTROL</span><h2>Checklist de pré-voo</h2></div><button class="close" value="cancel">×</button></div>
+        <div class="dialog-header"><div><span class="eyebrow">LEAF GROUND CONTROL</span><h2>Checklist Pre-Dive</h2></div><button class="close" value="cancel">×</button></div>
         <p class="note">Revise todos os itens antes de uma operação. Nesta versão, esta tela não envia comandos à Pixhawk.</p>
         <div id="preflightAutomatic" class="preflight-list"></div>
         <label class="check-item"><input id="checkTether" type="checkbox" /> Tether, conectores e vedação inspecionados</label>
         <label class="check-item"><input id="checkSafety" type="checkbox" /> Área segura e procedimento de emergência confirmado</label>
         <p id="preflightMessage" class="note">Aguardando verificações.</p>
-        <button class="action primary save" id="confirmPreflight" value="default" disabled>CONFIRMAR PRÉ-VOO</button>
+        <button class="action primary save" id="confirmPreflight" value="default" disabled>LIBERAR ARMAMENTO</button>
       </form>
     </dialog>
     <script src="app.js"></script>

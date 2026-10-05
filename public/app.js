@@ -10,7 +10,7 @@ let activeGamepad;
 let telemetryRecording = false;
 let telemetryLog = [];
 let recordingOrigin;
-let preflightConfirmed = false;
+let preDiveReleased = false;
 const mappingKey = 'leaf-os-control-mapping';
 const defaultControlMapping = { surge: 1, sway: 0, heave: 3, yaw: 2 };
 let controlMapping = { ...defaultControlMapping };
@@ -133,10 +133,15 @@ function updatePreflight() {
   $('#preflightAutomatic').innerHTML = checks.map(([label, ready]) => `<div class="preflight-item ${ready ? 'ready' : ''}">${label}: ${ready ? 'pronto' : 'pendente'}</div>`).join('');
   const manualReady = $('#checkTether').checked && $('#checkSafety').checked;
   const ready = checks.every(([, itemReady]) => itemReady) && manualReady;
+  if (!ready) preDiveReleased = false;
   $('#confirmPreflight').disabled = !ready;
-  $('#preflightButton').classList.toggle('ready', ready || preflightConfirmed);
-  $('#preflightButton').textContent = preflightConfirmed ? 'PRÉ-VOO: CONFIRMADO' : 'PRÉ-VOO';
-  $('#preflightMessage').textContent = preflightConfirmed ? 'Pré-voo confirmado para esta sessão.' : ready ? 'Todos os itens estão prontos para confirmação.' : 'Conclua os itens pendentes para liberar a confirmação.';
+  $('#preflightMessage').textContent = preDiveReleased ? 'Pre-Dive confirmado. Retorne à tela principal para armar.' : ready ? 'Todos os itens estão prontos para liberar o armamento.' : 'Conclua os itens pendentes para liberar o armamento.';
+}
+
+function updateArmButton() {
+  if (!state) return;
+  $('#armButton').textContent = state.armed ? 'DESARMAR VEÍCULO' : preDiveReleased ? 'ARMAR VEÍCULO' : 'ARMAR · PRE-DIVE';
+  $('#armButton').classList.toggle('ready', preDiveReleased && !state.armed);
 }
 
 function mappedAxis(gamepad, action) {
@@ -208,7 +213,7 @@ function render(data) {
   $('#armStatus').textContent = data.armed ? 'ARMADO' : 'DESARMADO';
   $('#armStatus').classList.toggle('armed', data.armed);
   $('#modeStatus').textContent = data.mode;
-  $('#armButton').textContent = data.armed ? 'DESARMAR VEÍCULO' : 'ARMAR VEÍCULO';
+  updateArmButton();
   $('#depth').innerHTML = `${data.telemetry.depth.toFixed(1)} <em>m</em>`;
   $('#heading').innerHTML = `${String(Math.round(data.telemetry.heading)).padStart(3, '0')}<em>°</em>`;
   $('#needle').style.transform = `rotate(${data.telemetry.heading}deg)`;
@@ -235,10 +240,9 @@ async function request(url, options) {
 
 $('#openSettings').addEventListener('click', () => { dialog.showModal(); refreshHealth(); });
 $('#refreshHealth').addEventListener('click', refreshHealth);
-$('#preflightButton').addEventListener('click', () => { preflightDialog.showModal(); updatePreflight(); });
-$('#checkTether').addEventListener('change', () => { preflightConfirmed = false; updatePreflight(); });
-$('#checkSafety').addEventListener('change', () => { preflightConfirmed = false; updatePreflight(); });
-$('#confirmPreflight').addEventListener('click', (event) => { event.preventDefault(); preflightConfirmed = true; updatePreflight(); preflightDialog.close(); });
+$('#checkTether').addEventListener('change', () => { preDiveReleased = false; updatePreflight(); updateArmButton(); });
+$('#checkSafety').addEventListener('change', () => { preDiveReleased = false; updatePreflight(); updateArmButton(); });
+$('#confirmPreflight').addEventListener('click', (event) => { event.preventDefault(); preDiveReleased = true; updatePreflight(); updateArmButton(); preflightDialog.close(); });
 $('#openControls').addEventListener('click', () => { populateMappingControls(); controlsDialog.showModal(); });
 $('#saveControls').addEventListener('click', (event) => {
   event.preventDefault();
@@ -247,7 +251,10 @@ $('#saveControls').addEventListener('click', (event) => {
   controlsDialog.close();
   renderControlSimulation(activeGamepad);
 });
-$('#armButton').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ armed: !state.armed }) })));
+$('#armButton').addEventListener('click', async () => {
+  if (!state.armed && !preDiveReleased) { preflightDialog.showModal(); updatePreflight(); return; }
+  window.alert('Pre-Dive liberado. O comando físico de armar/desarmar continua bloqueado nesta fase de validação MAVLink.');
+});
 $('#depthHold').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ mode: state.mode === 'ALT_HOLD' ? 'STABILIZE' : 'ALT_HOLD' }) })));
 $('#record').addEventListener('click', () => {
   if (telemetryRecording && recordingOrigin === 'auto') {

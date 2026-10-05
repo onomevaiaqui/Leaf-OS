@@ -23,7 +23,7 @@ Abra as configurações e verifique a seção **Prontidão do ROV**. Ela indica 
 - **Controle**: a barra inferior indica se o joystick está conectado e mostra seus eixos. Nesta versão, ele ainda não movimenta o ROV.
 - **Resposta do joystick**: o quadro de simulação mostra os quatro movimentos configurados. Use **Configurar eixos** para adaptar o layout ao seu controle.
 - **Gravar telemetria**: inicia o registro local da sessão; ao parar, o navegador baixa um CSV com os dados coletados.
-- **Pré-voo**: combina estado da Pixhawk, bateria, joystick e confirmações manuais. Nesta versão, é informativo e não arma o veículo.
+- **Armar / Pre-Dive**: ao clicar em armar, o checklist Pre-Dive combina estado da Pixhawk, bateria, joystick e confirmações manuais. Após a liberação, o comando físico ainda permanece bloqueado nesta versão.
 
 ## Segurança
 
