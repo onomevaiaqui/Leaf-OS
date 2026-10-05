@@ -28,6 +28,26 @@ function renderHealth(health) {
   $('#healthItems').innerHTML = health.components.map((component) => `<div class="health-item ${component.ready ? 'ready' : ''}">${component.label}<small>${component.detail}</small></div>`).join('');
 }
 
+function renderHistory(history) {
+  const samples = history.samples.filter((sample) => Number.isFinite(sample.telemetry?.voltage));
+  $('#historyState').textContent = samples.length ? `${samples.length} amostras` : 'Aguardando telemetria';
+  if (samples.length < 2) { $('#voltageLine').setAttribute('points', ''); return; }
+  const values = samples.map((sample) => sample.telemetry.voltage);
+  let minimum = Math.min(...values);
+  let maximum = Math.max(...values);
+  if (maximum - minimum < 0.05) { minimum -= 0.05; maximum += 0.05; }
+  const points = values.map((value, index) => `${(index / (values.length - 1)) * 100},${100 - ((value - minimum) / (maximum - minimum)) * 100}`).join(' ');
+  $('#voltageLine').setAttribute('points', points);
+}
+
+async function refreshStatus() {
+  try { render(await request('/api/status')); } catch (error) { console.error(error); }
+}
+
+async function refreshHistory() {
+  try { renderHistory(await request('/api/telemetry/history')); } catch (error) { console.error(error); }
+}
+
 async function refreshHealth() {
   try { renderHealth(await request('/api/health')); }
   catch { $('#healthItems').textContent = 'Diagnóstico indisponível.'; }
@@ -80,3 +100,6 @@ $('#addRtsp').addEventListener('click', async () => {
   $('#rtspUrl').value = '';
 });
 Promise.all([request('/api/status'), request('/api/video/sources'), request('/api/video/stream')]).then(([data, video, activeStream]) => { render(data); setSources(video.sources); renderStream(activeStream); }).catch(console.error);
+setInterval(refreshStatus, 1000);
+setInterval(refreshHistory, 5000);
+refreshHistory();

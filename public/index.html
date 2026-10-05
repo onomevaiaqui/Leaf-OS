@@ -39,6 +39,12 @@
         </aside>
       </section>
 
+      <section class="history-panel" aria-label="Histórico de tensão">
+        <div><span class="eyebrow">MAVLINK · HISTÓRICO</span><strong>Tensão da bateria</strong></div>
+        <span id="historyState">Aguardando telemetria</span>
+        <svg id="voltageChart" viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Gráfico de tensão"><polyline id="voltageLine" points="" /></svg>
+      </section>
+
       <footer>
         <button id="armButton" class="action primary">ARMAR VEÍCULO</button>
         <button class="action" id="depthHold">MANTER PROFUNDIDADE</button>

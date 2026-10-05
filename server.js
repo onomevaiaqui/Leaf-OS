@@ -53,6 +53,7 @@ http.createServer(async (request, response) => {
     for (const [key, value] of Object.entries(vehicle.telemetry || {})) if (Number.isFinite(value)) telemetry[key] = value;
     return json(response, 200, { ...rov, armed: vehicle.connected ? vehicle.armed : rov.armed, mode: vehicle.connected ? vehicle.mode || rov.mode : rov.mode, telemetry, mavlink: vehicle });
   }
+  if (request.method === 'GET' && url.pathname === '/api/telemetry/history') return json(response, 200, await mavlink.getHistory());
   if (request.method === 'GET' && url.pathname === '/api/health') return json(response, 200, await health.inspect());
   if (request.method === 'GET' && url.pathname === '/api/video/sources') return json(response, 200, { sources: listSources() });
   if (request.method === 'GET' && url.pathname === '/api/video/stream') return json(response, 200, stream.status());

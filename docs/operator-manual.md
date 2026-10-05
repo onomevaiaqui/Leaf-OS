@@ -17,6 +17,7 @@ Abra as configurações e verifique a seção **Prontidão do ROV**. Ela indica 
 - **Vídeo**: área central de visão do ROV. Quando o pipeline e o MediaMTX estão ativos, o Leaf Ground Control abre automaticamente o leitor WebRTC embutido nessa área.
 - **Profundidade / rumo**: rumo passa a vir da Pixhawk quando a ponte MAVLink estiver conectada. Profundidade ainda é simulada.
 - **Bateria / corrente / link**: tensão e corrente passam a vir da Pixhawk quando a ponte MAVLink estiver conectada. Link ainda é simulado.
+- **Histórico MAVLink**: o gráfico abaixo do vídeo mostra a tensão recebida da Pixhawk nos últimos minutos. Ele reinicia quando a ponte MAVLink é reiniciada.
 - **Configurações**: escolha câmera, resolução, FPS e bitrate, ou cadastre uma URL RTSP.
 - **Iniciar vídeo**: inicia a captura USB selecionada no Raspberry. Use novamente para parar.
 

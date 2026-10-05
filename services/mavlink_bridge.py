@@ -5,6 +5,7 @@ import json
 import os
 import threading
 import time
+from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from pymavlink import mavutil
@@ -24,11 +25,28 @@ state = {
     "error": None,
 }
 lock = threading.Lock()
+history = deque(maxlen=900)
+last_sample_at = 0
 
 
 def snapshot():
     with lock:
         return json.loads(json.dumps(state))
+
+
+def history_snapshot():
+    with lock:
+        return list(history)
+
+
+def add_sample_if_due():
+    global last_sample_at
+    now = time.time()
+    if now - last_sample_at < 1:
+        return
+    with lock:
+        history.append({"timestamp": now, "telemetry": dict(state["telemetry"])})
+    last_sample_at = now
 
 
 def update_from_message(master, message):
@@ -67,6 +85,7 @@ def mavlink_loop():
                 message = master.recv_match(blocking=True, timeout=1)
                 if message:
                     update_from_message(master, message)
+                add_sample_if_due()
                 with lock:
                     if state["lastHeartbeat"] and time.time() - state["lastHeartbeat"] > 5:
                         state["connected"] = False
@@ -82,10 +101,13 @@ def mavlink_loop():
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path != "/status":
+        if self.path == "/history":
+            payload = json.dumps({"samples": history_snapshot()}).encode("utf-8")
+        elif self.path == "/status":
+            payload = json.dumps(snapshot()).encode("utf-8")
+        else:
             self.send_error(404)
             return
-        payload = json.dumps(snapshot()).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(payload)))

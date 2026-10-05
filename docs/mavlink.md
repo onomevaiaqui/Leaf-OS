@@ -12,6 +12,8 @@ Campos já encaminhados ao Leaf Ground Control:
 - Tensão e corrente, a partir de `SYS_STATUS`.
 - Rumo, a partir de `VFR_HUD`.
 
+A ponte também mantém até 15 minutos de amostras de telemetria na memória, coletadas uma vez por segundo. O Leaf Ground Control usa essas amostras para mostrar o histórico de tensão. Esse histórico é temporário e reinicia junto com o serviço.
+
 Profundidade não é inferida nesta versão: ela será integrada usando a mensagem e a referência corretas configuradas no ArduSub. Isso evita apresentar altitude como se fosse profundidade.
 
 ## Conexão serial
