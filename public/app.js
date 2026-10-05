@@ -26,6 +26,9 @@ function renderStream(nextStream) {
 
 function render(data) {
   state = data;
+  const mavlinkOnline = data.mavlink?.connected === true;
+  $('#connectionLabel').textContent = mavlinkOnline ? 'PIXHAWK CONECTADA' : 'PIXHAWK DESCONECTADA';
+  $('#mavlinkConnection').classList.toggle('offline', !mavlinkOnline);
   $('#armStatus').textContent = data.armed ? 'ARMADO' : 'DESARMADO';
   $('#armStatus').classList.toggle('armed', data.armed);
   $('#modeStatus').textContent = data.mode;

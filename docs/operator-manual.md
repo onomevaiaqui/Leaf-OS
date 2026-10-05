@@ -8,6 +8,8 @@
 4. Abra o endereço do Leaf OS no navegador.
 5. Confirme a conexão, a tensão da bateria e o vídeo antes de armar.
 
+O cabeçalho exibe **Pixhawk conectada** somente quando a ponte MAVLink recebe heartbeats reais. **Pixhawk desconectada** significa que a página Leaf OS está disponível, mas não há comunicação válida com o controlador de voo.
+
 ## Tela principal
 
 - **Vídeo**: área central de visão do ROV. Quando o pipeline e o MediaMTX estão ativos, o Leaf Ground Control abre automaticamente o leitor WebRTC embutido nessa área.
