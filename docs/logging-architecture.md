@@ -11,7 +11,9 @@ O Leaf Ground Control oferece um painel de monitoramento para os dados recebidos
 
 ## Estado atual
 
-A ponte MAVLink atual cria um arquivo JSONL em `data/logs` assim que o serviço inicia. Ela grava amostras de telemetria uma vez por segundo, mensagens `STATUSTEXT` e marcos de armar/desarmar. O arquivo permanece no computador ou, quando o serviço for instalado, no Raspberry Pi.
+A ponte MAVLink atual cria um arquivo JSONL em `data/logs` assim que o serviço inicia. Ela grava amostras de telemetria uma vez por segundo, mensagens `STATUSTEXT`, marcos de armar/desarmar e comandos de joystick recebidos no modo dry-run. O arquivo permanece no computador ou, quando o serviço for instalado, no Raspberry Pi.
+
+Um evento `control_input` no JSONL é apenas um registro da intenção do operador. Nesta fase, ele nunca é transformado em comando MAVLink nem chega à Pixhawk.
 
 O Log do Equipamento permite consultar até os últimos 200 eventos de cada sessão diretamente no navegador.
 

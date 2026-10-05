@@ -59,6 +59,10 @@ http.createServer(async (request, response) => {
     try { return json(response, 200, await mavlink.calibrateDepth((await readBody(request)).waterDensity)); }
     catch (error) { return json(response, 400, { error: error.message }); }
   }
+  if (request.method === 'POST' && url.pathname === '/api/control/input') {
+    try { return json(response, 200, await mavlink.recordControlInput(await readBody(request))); }
+    catch (error) { return json(response, 400, { error: error.message }); }
+  }
   if (request.method === 'GET' && url.pathname === '/api/health') return json(response, 200, await health.inspect());
   if (request.method === 'GET' && url.pathname === '/api/logs') return json(response, 200, { sessions: sessionLogs.list() });
   if (request.method === 'GET' && url.pathname.startsWith('/api/logs/') && url.pathname.endsWith('/download')) {

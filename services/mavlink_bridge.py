@@ -2,6 +2,7 @@
 """Leaf OS MAVLink Bridge: local, read-only telemetry service for Pixhawk."""
 
 import json
+import math
 import os
 import threading
 import time
@@ -29,7 +30,7 @@ state = {
     "armed": False,
     "mode": None,
     "telemetry": {"depth": None, "heading": None, "voltage": None, "current": None, "link": None},
-    "equipment": {"battery": {}, "flightController": {}, "motors": [], "esc": [], "pressure": {}, "depthCalibration": {}, "messages": []},
+    "equipment": {"battery": {}, "flightController": {}, "controlInput": {}, "motors": [], "esc": [], "pressure": {}, "depthCalibration": {}, "messages": []},
     "logging": {"file": LOG_PATH.name, "startedAt": time.time(), "entries": 0},
     "error": None,
 }
@@ -84,6 +85,16 @@ def calibrate_depth(water_density):
             "waterDensity": water_density,
             "calibratedAt": time.time(),
         }
+    return snapshot()
+
+
+def record_control_input(command):
+    axes = {axis: command.get(axis) for axis in ("surge", "sway", "heave", "yaw")}
+    if not all(type(value) in (int, float) and math.isfinite(value) and -1 <= value <= 1 for value in axes.values()):
+        raise ValueError("Comando de joystick inválido.")
+    with lock:
+        state["equipment"]["controlInput"] = {**axes, "receivedAt": time.time(), "mode": "dry-run"}
+    write_log({"type": "control_input", "mode": "dry-run", **axes})
     return snapshot()
 
 
@@ -258,13 +269,14 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
     def do_POST(self):
-        if self.path != "/calibrate/depth":
+        if self.path not in ("/calibrate/depth", "/control/input"):
             self.send_error(404)
             return
         try:
             length = int(self.headers.get("Content-Length", "0"))
             body = json.loads(self.rfile.read(length) or b"{}")
-            payload = json.dumps(calibrate_depth(body.get("waterDensity"))).encode("utf-8")
+            result = calibrate_depth(body.get("waterDensity")) if self.path == "/calibrate/depth" else record_control_input(body)
+            payload = json.dumps(result).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(payload)))

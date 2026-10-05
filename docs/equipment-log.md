@@ -8,6 +8,7 @@ O botão **Log do equipamento**, dentro da engrenagem de configuração, reúne 
 - qualidade do link MAVLink;
 - carga, perda de comunicação, erros e saúde de sensores da Pixhawk;
 - saídas PWM de motores/propulsores, quando a Pixhawk publicar `SERVO_OUTPUT_RAW`;
+- último comando do joystick recebido no modo **dry-run**, sem envio à Pixhawk;
 - RPM, temperatura e corrente dos ESCs, quando os ESCs publicarem `ESC_STATUS`;
 - pressão e temperatura brutas dos sensores da Pixhawk;
 - mensagens e avisos enviados pela Pixhawk via `STATUSTEXT`.
@@ -22,7 +23,7 @@ O resumo do Log do Equipamento mostra a quantidade de eventos já persistidos no
 
 ## Sessões gravadas
 
-Na parte inferior do painel, **Sessões gravadas** lista arquivos técnicos anteriores. Selecione uma sessão e clique em **Abrir sessão** para ver os últimos eventos, incluindo telemetria, marcos de missão e avisos da Pixhawk.
+Na parte inferior do painel, **Sessões gravadas** lista arquivos técnicos anteriores. Selecione uma sessão e clique em **Abrir sessão** para ver os últimos eventos, incluindo telemetria, comandos simulados, marcos de missão e avisos da Pixhawk.
 
 Use **Baixar arquivo da sessão** para salvar o JSONL original, adequado para análise técnica posterior.
 

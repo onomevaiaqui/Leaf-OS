@@ -9,6 +9,7 @@ let stream;
 let localStream;
 let activeGamepad;
 let preDiveReleased = false;
+let lastControlInputAt = 0;
 const profileKey = 'leaf-os-vehicle-profile';
 let vehicleProfile = { name: 'Leaf ROV · Unidade 01', minimumVoltage: 0, maximumEscTemperature: 0, waterDensity: 1025 };
 try { vehicleProfile = { ...vehicleProfile, ...JSON.parse(localStorage.getItem(profileKey) || '{}') }; } catch { /* usa o padrão */ }
@@ -110,6 +111,14 @@ function renderEquipmentLog(data) {
   $('#flightControllerLog').innerHTML = controller.sensorHealth ? controllerItems.map(([label, value]) => `<div class="equipment-item"><strong>${label}</strong>${escapeHtml(value)}</div>`).join('') : 'Aguardando estado da Pixhawk.';
   const motors = equipment.motors || [];
   $('#motorLog').innerHTML = motors.length ? motors.map((motor) => `<div class="equipment-item"><strong>Saída ${motor.channel}</strong>${escapeHtml(motor.pwm)} µs</div>`).join('') : 'Aguardando saídas PWM da Pixhawk.';
+  const controlInput = equipment.controlInput || {};
+  const controlReceivedAt = controlInput.receivedAt ? new Date(controlInput.receivedAt * 1000).toLocaleTimeString('pt-BR') : null;
+  $('#controlInputLog').innerHTML = controlReceivedAt ? [
+    ['Avançar / recuar', controlInput.surge],
+    ['Lateral', controlInput.sway],
+    ['Subir / descer', controlInput.heave],
+    ['Guinada', controlInput.yaw],
+  ].map(([label, value]) => `<div class="equipment-item"><strong>${label}</strong>${number(value)}</div>`).join('') + `<div class="equipment-item"><strong>Modo</strong>${escapeHtml(controlInput.mode || 'dry-run')} · ${escapeHtml(controlReceivedAt)}</div>` : 'Aguardando comando do joystick.';
   const escs = equipment.esc || [];
   $('#escLog').innerHTML = escs.length ? escs.map((esc) => `<div class="equipment-item"><strong>ESC ${esc.index}</strong>${number(esc.rpm, ' RPM')}<br>${number(esc.temperature, ' °C')} · ${number(esc.current, ' A')} · ${number(esc.voltage, ' V')}</div>`).join('') : 'Aguardando dados de ESC.';
   const pressure = equipment.pressure || {};
@@ -141,7 +150,7 @@ async function openSessionLog() {
     const session = await request(`/api/logs/${encodeURIComponent(name)}`);
     $('#sessionLogEntries').innerHTML = session.events.length ? session.events.slice().reverse().map((event) => {
       const timestamp = event.timestamp ? new Date(event.timestamp * 1000).toLocaleString('pt-BR') : '—';
-      const detail = event.type === 'telemetry' ? `Tensão: ${event.telemetry?.voltage ?? '—'} V · Corrente: ${event.telemetry?.current ?? '—'} A` : event.text || event.event || JSON.stringify(event);
+      const detail = event.type === 'telemetry' ? `Tensão: ${event.telemetry?.voltage ?? '—'} V · Corrente: ${event.telemetry?.current ?? '—'} A` : event.type === 'control_input' ? `Dry-run · Avançar: ${event.surge ?? '—'} · Lateral: ${event.sway ?? '—'} · Vertical: ${event.heave ?? '—'} · Guinada: ${event.yaw ?? '—'}` : event.text || event.event || JSON.stringify(event);
       return `<div class="message-entry">${escapeHtml(timestamp)} · <strong>${escapeHtml(event.type || 'evento')}</strong> · ${escapeHtml(detail)}</div>`;
     }).join('') : 'Esta sessão não possui eventos.';
   } catch (error) { $('#sessionLogEntries').textContent = error.message; }
@@ -183,6 +192,7 @@ function updateGamepad() {
   readout.textContent = `${name} · Eixos: ${axes || '—'} · Botões pressionados: ${pressed}`;
   readout.className = 'gamepad-readout connected';
   renderControlSimulation(activeGamepad);
+  sendDryRunControlInput(activeGamepad);
   updatePreflight();
 }
 
@@ -221,6 +231,21 @@ function renderControlSimulation(gamepad) {
     $(`#${barId}`).style.width = `${Math.abs(value) * 100}%`;
     $(`#${barId}`).style.background = value < 0 ? '#8fbc64' : '#3a8263';
   });
+}
+
+function sendDryRunControlInput(gamepad) {
+  if (!gamepad) return;
+  const input = Object.fromEntries(['surge', 'sway', 'heave', 'yaw'].map((action) => [action, mappedAxis(gamepad, action)]));
+  const moving = Object.values(input).some((value) => value !== 0);
+  const now = Date.now();
+  const interval = moving ? 250 : 1000;
+  if (now - lastControlInputAt < interval) return;
+  lastControlInputAt = now;
+  request('/api/control/input', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(input),
+  }).catch((error) => console.warn('Não foi possível registrar o comando simulado:', error.message));
 }
 
 async function refreshHealth() {
