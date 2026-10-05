@@ -91,12 +91,14 @@ function renderEquipmentLog(data) {
   const mavlink = data.mavlink || {};
   const equipment = mavlink.equipment || {};
   const battery = equipment.battery || {};
+  const logging = mavlink.logging || {};
   const number = (value, suffix = '') => Number.isFinite(value) ? `${value}${suffix}` : '—';
   $('#equipmentSummary').innerHTML = [
     ['BATERIA', number(data.telemetry?.voltage, ' V')],
     ['CORRENTE', number(data.telemetry?.current, ' A')],
     ['LINK', number(data.telemetry?.link, '%')],
     ['CARGA', number(battery.remaining, '%')],
+    ['LOG', `${logging.entries ?? 0} eventos`],
   ].map(([label, value]) => `<div class="equipment-card"><span>${label}</span><strong>${value}</strong></div>`).join('');
   const controller = equipment.flightController || {};
   const controllerItems = [

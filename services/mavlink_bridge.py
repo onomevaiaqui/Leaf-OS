@@ -7,6 +7,7 @@ import threading
 import time
 from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 
 from pymavlink import mavutil
 
@@ -14,6 +15,12 @@ CONNECTION = os.environ.get("PIXHAWK_CONNECTION", "/dev/ttyACM0")
 BAUD = int(os.environ.get("PIXHAWK_BAUD", "115200"))
 HOST = os.environ.get("LEAF_MAVLINK_HOST", "127.0.0.1")
 PORT = int(os.environ.get("LEAF_MAVLINK_PORT", "8090"))
+LOG_DIRECTORY = Path(os.environ.get("LEAF_LOG_DIRECTORY", Path(__file__).resolve().parent.parent / "data" / "logs"))
+LOG_DIRECTORY.mkdir(parents=True, exist_ok=True)
+LOG_PATH = LOG_DIRECTORY / f"leaf-os-{time.strftime('%Y%m%d-%H%M%S')}.jsonl"
+log_lock = threading.Lock()
+log_entries = 0
+last_armed_state = None
 
 state = {
     "connected": False,
@@ -23,9 +30,10 @@ state = {
     "mode": None,
     "telemetry": {"depth": None, "heading": None, "voltage": None, "current": None, "link": None},
     "equipment": {"battery": {}, "flightController": {}, "motors": [], "esc": [], "pressure": {}, "depthCalibration": {}, "messages": []},
+    "logging": {"file": LOG_PATH.name, "startedAt": time.time(), "entries": 0},
     "error": None,
 }
-lock = threading.Lock()
+lock = threading.RLock()
 history = deque(maxlen=900)
 last_sample_at = 0
 
@@ -46,6 +54,17 @@ def snapshot():
         depth = max(0, (external_pressure - calibration["surfacePressure"]) * 100 / (calibration["waterDensity"] * 9.80665))
         payload["telemetry"]["depth"] = round(depth, 2)
     return payload
+
+
+def write_log(record):
+    global log_entries
+    entry = {"timestamp": time.time(), **record}
+    with log_lock:
+        with LOG_PATH.open("a", encoding="utf-8") as log_file:
+            log_file.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        log_entries += 1
+    with lock:
+        state["logging"]["entries"] = log_entries
 
 
 def history_snapshot():
@@ -74,11 +93,14 @@ def add_sample_if_due():
     if now - last_sample_at < 1:
         return
     with lock:
-        history.append({"timestamp": now, "telemetry": dict(state["telemetry"])})
+        sample = {"timestamp": now, "telemetry": dict(state["telemetry"])}
+        history.append(sample)
     last_sample_at = now
+    write_log({"type": "telemetry", **sample})
 
 
 def update_from_message(master, message):
+    global last_armed_state
     message_type = message.get_type()
     with lock:
         if message_type == "HEARTBEAT":
@@ -87,6 +109,9 @@ def update_from_message(master, message):
             state["lastHeartbeat"] = time.time()
             state["armed"] = master.motors_armed()
             state["mode"] = master.flightmode
+            if last_armed_state is None or state["armed"] != last_armed_state:
+                write_log({"type": "mission", "event": "armed" if state["armed"] else "disarmed", "mode": state["mode"]})
+                last_armed_state = state["armed"]
         elif message_type == "SYS_STATUS":
             if message.voltage_battery >= 0:
                 state["telemetry"]["voltage"] = round(message.voltage_battery / 1000, 2)
@@ -154,6 +179,7 @@ def update_from_message(master, message):
                 text = text.decode("utf-8", errors="replace")
             state["equipment"]["messages"].append({"timestamp": time.time(), "severity": getattr(message, "severity", None), "text": str(text).rstrip("\x00")})
             state["equipment"]["messages"] = state["equipment"]["messages"][-50:]
+            write_log({"type": "statustext", "severity": getattr(message, "severity", None), "text": str(text).rstrip("\x00")})
 
 
 def request_equipment_streams(master, heartbeat):
@@ -257,5 +283,6 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    write_log({"type": "service", "event": "started", "connection": CONNECTION})
     threading.Thread(target=mavlink_loop, daemon=True).start()
     ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()

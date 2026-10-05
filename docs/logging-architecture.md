@@ -11,4 +11,6 @@ O Leaf Ground Control oferece um painel de monitoramento para os dados recebidos
 
 ## Estado atual
 
-A versão atual implementa monitoramento ao vivo no computador de superfície. A implementação embarcada, persistente e com buffer pré-armamento será ativada com a chegada do Raspberry Pi.
+A ponte MAVLink atual cria um arquivo JSONL em `data/logs` assim que o serviço inicia. Ela grava amostras de telemetria uma vez por segundo, mensagens `STATUSTEXT` e marcos de armar/desarmar. O arquivo permanece no computador ou, quando o serviço for instalado, no Raspberry Pi.
+
+A implementação embarcada com buffer pré-armamento será ativada com a chegada do Raspberry Pi.
