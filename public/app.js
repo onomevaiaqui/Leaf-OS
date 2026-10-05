@@ -101,7 +101,10 @@ function renderEquipmentLog(data) {
   const motors = equipment.motors || [];
   $('#motorLog').innerHTML = motors.length ? motors.map((motor) => `<div class="equipment-item"><strong>Saída ${motor.channel}</strong>${escapeHtml(motor.pwm)} µs</div>`).join('') : 'Aguardando saídas PWM da Pixhawk.';
   const escs = equipment.esc || [];
-  $('#escLog').innerHTML = escs.length ? escs.map((esc) => `<div class="equipment-item"><strong>ESC ${esc.index}</strong>${number(esc.rpm, ' RPM')}<br>${number(esc.temperature, ' °C')} · ${number(esc.current, ' A')}</div>`).join('') : 'Aguardando dados de ESC.';
+  $('#escLog').innerHTML = escs.length ? escs.map((esc) => `<div class="equipment-item"><strong>ESC ${esc.index}</strong>${number(esc.rpm, ' RPM')}<br>${number(esc.temperature, ' °C')} · ${number(esc.current, ' A')} · ${number(esc.voltage, ' V')}</div>`).join('') : 'Aguardando dados de ESC.';
+  const pressure = equipment.pressure || {};
+  const pressureItems = [['Sensor interno', pressure.internal], ['Sensor externo', pressure.external]].filter(([, value]) => value);
+  $('#pressureLog').innerHTML = pressureItems.length ? pressureItems.map(([label, sensor]) => `<div class="equipment-item"><strong>${label}</strong>${number(sensor.absolute, ' hPa')}<br>${number(sensor.temperature, ' °C')}</div>`).join('') : 'Aguardando dados do sensor de pressão.';
   const messages = equipment.messages || [];
   $('#messageLog').innerHTML = messages.length ? messages.slice().reverse().map((message) => `<div class="message-entry">[${escapeHtml(message.severity)}] ${escapeHtml(message.text)}</div>`).join('') : 'Nenhuma mensagem recebida.';
   const alerts = [];

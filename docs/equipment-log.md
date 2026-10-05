@@ -8,6 +8,7 @@ O botão **Log do equipamento**, dentro da engrenagem de configuração, reúne 
 - qualidade do link MAVLink;
 - saídas PWM de motores/propulsores, quando a Pixhawk publicar `SERVO_OUTPUT_RAW`;
 - RPM, temperatura e corrente dos ESCs, quando os ESCs publicarem `ESC_STATUS`;
+- pressão e temperatura brutas dos sensores da Pixhawk;
 - mensagens e avisos enviados pela Pixhawk via `STATUSTEXT`.
 
 ## Alertas
@@ -17,3 +18,5 @@ O painel mostra alertas para Pixhawk desconectada e bateria abaixo do limite mí
 A ausência de um grupo de dados significa que o autopiloto ou o periférico ainda não está publicando aquela mensagem MAVLink. Isso é esperado em testes sem ESCs, bateria ou propulsores conectados.
 
 Ao receber o primeiro heartbeat, o Leaf OS solicita em baixa frequência as mensagens de bateria, saídas PWM e ESC para a Pixhawk. Esse pedido só configura a taxa de telemetria; ele não arma, não muda modo e não envia movimento para os motores.
+
+Os valores de pressão são apresentados em hPa e ainda não equivalem a profundidade. A conversão para metros exige definir a pressão de referência na superfície e a densidade da água usada na operação.

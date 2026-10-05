@@ -22,7 +22,7 @@ state = {
     "armed": False,
     "mode": None,
     "telemetry": {"depth": None, "heading": None, "voltage": None, "current": None, "link": None},
-    "equipment": {"battery": {}, "motors": [], "esc": [], "messages": []},
+    "equipment": {"battery": {}, "motors": [], "esc": [], "pressure": {}, "messages": []},
     "error": None,
 }
 lock = threading.Lock()
@@ -114,6 +114,14 @@ def update_from_message(master, message):
                     "current": round(currents[index] / 100, 2) if index < len(currents) and currents[index] else None,
                 })
             state["equipment"]["esc"] = escs
+        elif message_type in ("SCALED_PRESSURE", "SCALED_PRESSURE2"):
+            sensor = "internal" if message_type == "SCALED_PRESSURE" else "external"
+            temperature = getattr(message, "temperature", None)
+            state["equipment"]["pressure"][sensor] = {
+                "absolute": round(getattr(message, "press_abs", 0) or 0, 2),
+                "differential": round(getattr(message, "press_diff", 0) or 0, 2),
+                "temperature": round(temperature / 100, 1) if temperature is not None else None,
+            }
         elif message_type == "STATUSTEXT":
             text = getattr(message, "text", "")
             if isinstance(text, bytes):
@@ -132,6 +140,8 @@ def request_equipment_streams(master, heartbeat):
         ("MAVLINK_MSG_ID_BATTERY_STATUS", 1_000_000),
         ("MAVLINK_MSG_ID_SERVO_OUTPUT_RAW", 500_000),
         ("MAVLINK_MSG_ID_ESC_STATUS", 1_000_000),
+        ("MAVLINK_MSG_ID_SCALED_PRESSURE", 500_000),
+        ("MAVLINK_MSG_ID_SCALED_PRESSURE2", 500_000),
     ]
     for message_name, interval_us in streams:
         message_id = getattr(mavutil.mavlink, message_name, None)

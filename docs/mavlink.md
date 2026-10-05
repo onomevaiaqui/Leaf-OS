@@ -19,7 +19,7 @@ Profundidade não é inferida nesta versão: ela será integrada usando a mensag
 
 O indicador de link começa em 100% após um heartbeat e cai progressivamente se novos heartbeats não chegam. Após cinco segundos sem heartbeat, a ponte considera a Pixhawk desconectada.
 
-Após a conexão, a ponte solicita `SYS_STATUS`, `BATTERY_STATUS`, `SERVO_OUTPUT_RAW` e `ESC_STATUS` por meio de `MAV_CMD_SET_MESSAGE_INTERVAL`, em taxas de 1–2 Hz. Isso permite preencher o Log do Equipamento sem habilitar comandos de atuação.
+Após a conexão, a ponte solicita `SYS_STATUS`, `BATTERY_STATUS`, `SERVO_OUTPUT_RAW`, `ESC_STATUS`, `SCALED_PRESSURE` e `SCALED_PRESSURE2` por meio de `MAV_CMD_SET_MESSAGE_INTERVAL`, em taxas de 1–2 Hz. Isso permite preencher o Log do Equipamento sem habilitar comandos de atuação.
 
 ## Conexão serial
 
