@@ -22,6 +22,8 @@ Essa separação permite receber uma câmera que entregue MJPEG ou vídeo bruto 
 
 No Leaf Ground Control aberto em `http://localhost:8080`, selecione **Webcam deste computador (teste)** nas configurações, salve e clique em **Iniciar vídeo**. Autorize o navegador quando ele pedir acesso à câmera. Esse modo é útil para validar a interface, resolução e visualização; ele não transmite a webcam pelo tether e não usa MediaMTX.
 
+Se a imagem não aparecer, clique no ícone de câmera na barra de endereço e permita o acesso para `localhost`. Feche Zoom, Teams, OBS e outros aplicativos que possam estar usando a câmera; em seguida recarregue a página e tente novamente.
+
 ## Problemas comuns
 
 **A câmera não aparece** — verifique `v4l2-ctl --list-devices`, desconecte/reconecte a câmera e recarregue o painel.

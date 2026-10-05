@@ -32,6 +32,8 @@ async function startLocalPreview() {
   const viewer = $('#localViewer');
   viewer.srcObject = localStream;
   viewer.hidden = false;
+  await viewer.play();
+  $('#cameraLabel').textContent = 'WEBCAM LOCAL · ATIVA';
   $('#stream').textContent = 'PARAR WEBCAM';
 }
 
@@ -41,6 +43,7 @@ function stopLocalPreview() {
   const viewer = $('#localViewer');
   viewer.srcObject = null;
   viewer.hidden = true;
+  $('#cameraLabel').textContent = 'CAM 01';
 }
 
 function renderHealth(health) {
@@ -117,7 +120,10 @@ $('#stream').addEventListener('click', async () => {
     }
     renderStream(await request(stream?.running ? '/api/video/stream/stop' : '/api/video/stream/start', { method: 'POST' }));
   }
-  catch (error) { window.alert(error.message); }
+  catch (error) {
+    stopLocalPreview();
+    window.alert(`Não foi possível abrir a webcam: ${error.message}`);
+  }
 });
 $('#saveCamera').addEventListener('click', async (event) => { event.preventDefault(); const camera = { source: $('#cameraSource').value, resolution: $('#cameraResolution').value, fps: Number($('#cameraFps').value), bitrate: Number($('#cameraBitrate').value) }; await request('/api/camera', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify(camera) }); render(await request('/api/status')); dialog.close(); });
 $('#addRtsp').addEventListener('click', async () => {
