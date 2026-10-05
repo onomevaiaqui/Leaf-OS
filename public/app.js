@@ -98,6 +98,14 @@ function renderEquipmentLog(data) {
     ['LINK', number(data.telemetry?.link, '%')],
     ['CARGA', number(battery.remaining, '%')],
   ].map(([label, value]) => `<div class="equipment-card"><span>${label}</span><strong>${value}</strong></div>`).join('');
+  const controller = equipment.flightController || {};
+  const controllerItems = [
+    ['Carga', number(controller.load, '%')],
+    ['Perda de comunicação', number(controller.dropRate, '%')],
+    ['Erros de comunicação', number(controller.communicationErrors)],
+    ['Saúde dos sensores', controller.sensorHealth || '—'],
+  ];
+  $('#flightControllerLog').innerHTML = controller.sensorHealth ? controllerItems.map(([label, value]) => `<div class="equipment-item"><strong>${label}</strong>${escapeHtml(value)}</div>`).join('') : 'Aguardando estado da Pixhawk.';
   const motors = equipment.motors || [];
   $('#motorLog').innerHTML = motors.length ? motors.map((motor) => `<div class="equipment-item"><strong>Saída ${motor.channel}</strong>${escapeHtml(motor.pwm)} µs</div>`).join('') : 'Aguardando saídas PWM da Pixhawk.';
   const escs = equipment.esc || [];

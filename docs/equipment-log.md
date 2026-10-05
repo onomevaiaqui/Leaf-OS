@@ -6,6 +6,7 @@ O botão **Log do equipamento**, dentro da engrenagem de configuração, reúne 
 
 - tensão, corrente, carga informada e histórico de bateria;
 - qualidade do link MAVLink;
+- carga, perda de comunicação, erros e saúde de sensores da Pixhawk;
 - saídas PWM de motores/propulsores, quando a Pixhawk publicar `SERVO_OUTPUT_RAW`;
 - RPM, temperatura e corrente dos ESCs, quando os ESCs publicarem `ESC_STATUS`;
 - pressão e temperatura brutas dos sensores da Pixhawk;

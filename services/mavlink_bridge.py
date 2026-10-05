@@ -22,7 +22,7 @@ state = {
     "armed": False,
     "mode": None,
     "telemetry": {"depth": None, "heading": None, "voltage": None, "current": None, "link": None},
-    "equipment": {"battery": {}, "motors": [], "esc": [], "pressure": {}, "depthCalibration": {}, "messages": []},
+    "equipment": {"battery": {}, "flightController": {}, "motors": [], "esc": [], "pressure": {}, "depthCalibration": {}, "messages": []},
     "error": None,
 }
 lock = threading.Lock()
@@ -97,6 +97,12 @@ def update_from_message(master, message):
                 "current": state["telemetry"]["current"],
                 "remaining": getattr(message, "battery_remaining", None),
                 "source": "SYS_STATUS",
+            }
+            state["equipment"]["flightController"] = {
+                "load": round(getattr(message, "load", 0) / 10, 1),
+                "dropRate": round(getattr(message, "drop_rate_comm", 0) / 100, 2),
+                "communicationErrors": getattr(message, "errors_comm", None),
+                "sensorHealth": f"0x{(getattr(message, 'onboard_control_sensors_health', 0) or 0):08X}",
             }
         elif message_type == "VFR_HUD":
             state["telemetry"]["heading"] = message.heading
