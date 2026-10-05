@@ -6,6 +6,7 @@ const { addRtspSource, listSources } = require('./lib/video');
 const stream = require('./lib/stream');
 const mavlink = require('./lib/mavlink-client');
 const health = require('./lib/health');
+const sessionLogs = require('./lib/session-logs');
 
 const port = Number(process.env.PORT || 8080);
 const publicDirectory = path.join(__dirname, 'public');
@@ -59,6 +60,11 @@ http.createServer(async (request, response) => {
     catch (error) { return json(response, 400, { error: error.message }); }
   }
   if (request.method === 'GET' && url.pathname === '/api/health') return json(response, 200, await health.inspect());
+  if (request.method === 'GET' && url.pathname === '/api/logs') return json(response, 200, { sessions: sessionLogs.list() });
+  if (request.method === 'GET' && url.pathname.startsWith('/api/logs/')) {
+    try { return json(response, 200, sessionLogs.read(decodeURIComponent(url.pathname.slice('/api/logs/'.length)))); }
+    catch (error) { return json(response, 400, { error: error.message }); }
+  }
   if (request.method === 'GET' && url.pathname === '/api/video/sources') return json(response, 200, { sources: listSources() });
   if (request.method === 'GET' && url.pathname === '/api/video/stream') return json(response, 200, stream.status());
   if (request.method === 'POST' && url.pathname === '/api/video/stream/start') {

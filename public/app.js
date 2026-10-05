@@ -128,6 +128,25 @@ function renderEquipmentLog(data) {
   $('#equipmentAlerts').innerHTML = alerts.map(([level, text]) => `<div class="equipment-alert ${level === 'ok' ? '' : level}">${escapeHtml(text)}</div>`).join('');
 }
 
+async function refreshSessionLogs() {
+  const { sessions } = await request('/api/logs');
+  const select = $('#sessionLogSelect');
+  select.innerHTML = sessions.length ? sessions.map((session) => `<option value="${escapeHtml(session.name)}">${escapeHtml(session.name)} · ${Math.ceil(session.size / 1024)} KB</option>`).join('') : '<option value="">Nenhuma sessão encontrada</option>';
+}
+
+async function openSessionLog() {
+  const name = $('#sessionLogSelect').value;
+  if (!name) return;
+  try {
+    const session = await request(`/api/logs/${encodeURIComponent(name)}`);
+    $('#sessionLogEntries').innerHTML = session.events.length ? session.events.slice().reverse().map((event) => {
+      const timestamp = event.timestamp ? new Date(event.timestamp * 1000).toLocaleString('pt-BR') : '—';
+      const detail = event.type === 'telemetry' ? `Tensão: ${event.telemetry?.voltage ?? '—'} V · Corrente: ${event.telemetry?.current ?? '—'} A` : event.text || event.event || JSON.stringify(event);
+      return `<div class="message-entry">${escapeHtml(timestamp)} · <strong>${escapeHtml(event.type || 'evento')}</strong> · ${escapeHtml(detail)}</div>`;
+    }).join('') : 'Esta sessão não possui eventos.';
+  } catch (error) { $('#sessionLogEntries').textContent = error.message; }
+}
+
 async function refreshStatus() {
   try {
     const status = await request('/api/status');
@@ -253,7 +272,8 @@ async function request(url, options) {
 
 $('#openSettings').addEventListener('click', () => { dialog.showModal(); refreshHealth(); });
 $('#refreshHealth').addEventListener('click', refreshHealth);
-$('#openEquipmentLog').addEventListener('click', () => { equipmentLogDialog.showModal(); refreshHistory(); });
+$('#openEquipmentLog').addEventListener('click', () => { equipmentLogDialog.showModal(); refreshHistory(); refreshSessionLogs().catch(() => {}); });
+$('#openSessionLog').addEventListener('click', openSessionLog);
 $('#zeroDepth').addEventListener('click', async () => {
   try {
     await request('/api/mavlink/calibrate-depth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ waterDensity: vehicleProfile.waterDensity }) });
