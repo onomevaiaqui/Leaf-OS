@@ -61,6 +61,14 @@ http.createServer(async (request, response) => {
   }
   if (request.method === 'GET' && url.pathname === '/api/health') return json(response, 200, await health.inspect());
   if (request.method === 'GET' && url.pathname === '/api/logs') return json(response, 200, { sessions: sessionLogs.list() });
+  if (request.method === 'GET' && url.pathname.startsWith('/api/logs/') && url.pathname.endsWith('/download')) {
+    try {
+      const name = decodeURIComponent(url.pathname.slice('/api/logs/'.length, -'/download'.length));
+      const content = sessionLogs.readRaw(name);
+      response.writeHead(200, { 'content-type': 'application/x-ndjson; charset=utf-8', 'content-disposition': `attachment; filename="${name}"` });
+      return response.end(content);
+    } catch (error) { return json(response, 400, { error: error.message }); }
+  }
   if (request.method === 'GET' && url.pathname.startsWith('/api/logs/')) {
     try { return json(response, 200, sessionLogs.read(decodeURIComponent(url.pathname.slice('/api/logs/'.length)))); }
     catch (error) { return json(response, 400, { error: error.message }); }

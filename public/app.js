@@ -274,6 +274,13 @@ $('#openSettings').addEventListener('click', () => { dialog.showModal(); refresh
 $('#refreshHealth').addEventListener('click', refreshHealth);
 $('#openEquipmentLog').addEventListener('click', () => { equipmentLogDialog.showModal(); refreshHistory(); refreshSessionLogs().catch(() => {}); });
 $('#openSessionLog').addEventListener('click', openSessionLog);
+$('#downloadSessionLog').addEventListener('click', () => {
+  const name = $('#sessionLogSelect').value;
+  if (!name) return;
+  const link = document.createElement('a');
+  link.href = `/api/logs/${encodeURIComponent(name)}/download`;
+  link.click();
+});
 $('#zeroDepth').addEventListener('click', async () => {
   try {
     await request('/api/mavlink/calibrate-depth', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ waterDensity: vehicleProfile.waterDensity }) });

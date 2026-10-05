@@ -24,6 +24,8 @@ O resumo do Log do Equipamento mostra a quantidade de eventos já persistidos no
 
 Na parte inferior do painel, **Sessões gravadas** lista arquivos técnicos anteriores. Selecione uma sessão e clique em **Abrir sessão** para ver os últimos eventos, incluindo telemetria, marcos de missão e avisos da Pixhawk.
 
+Use **Baixar arquivo da sessão** para salvar o JSONL original, adequado para análise técnica posterior.
+
 Ao receber o primeiro heartbeat, o Leaf OS solicita em baixa frequência as mensagens de bateria, saídas PWM e ESC para a Pixhawk. Esse pedido só configura a taxa de telemetria; ele não arma, não muda modo e não envia movimento para os motores.
 
 Os valores de pressão são apresentados em hPa e ainda não equivalem a profundidade. A conversão para metros exige definir a pressão de referência na superfície e a densidade da água usada na operação.
