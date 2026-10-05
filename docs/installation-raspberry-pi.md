@@ -35,3 +35,5 @@ Portas usadas na rede local:
 ## Verificar a câmera USB
 
 Conecte a câmera e execute `v4l2-ctl --list-devices`. Um dispositivo como `/dev/video0` deve aparecer. Reinicie o painel, abra configurações e selecione essa fonte. Se ela não aparecer, consulte [Vídeo e câmeras](video.md).
+
+Para a sequência completa de validação, consulte [Teste de bancada](bench-test.md).
