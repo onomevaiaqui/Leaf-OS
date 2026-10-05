@@ -1,10 +1,24 @@
 const $ = (selector) => document.querySelector(selector);
 const dialog = $('#settings');
+const controlsDialog = $('#controlsDialog');
 let state;
 let sources = [];
 let stream;
 let localStream;
 let activeGamepad;
+const mappingKey = 'leaf-os-control-mapping';
+const defaultControlMapping = { surge: 1, sway: 0, heave: 3, yaw: 2 };
+let controlMapping = { ...defaultControlMapping };
+
+try { controlMapping = { ...defaultControlMapping, ...JSON.parse(localStorage.getItem(mappingKey) || '{}') }; } catch { /* usa o padrão */ }
+
+function populateMappingControls() {
+  const options = Array.from({ length: 8 }, (_, axis) => `<option value="${axis}">Eixo ${axis + 1}</option>`).join('');
+  [['mapSurge', 'surge'], ['mapSway', 'sway'], ['mapHeave', 'heave'], ['mapYaw', 'yaw']].forEach(([id, action]) => {
+    $(`#${id}`).innerHTML = options;
+    $(`#${id}`).value = controlMapping[action];
+  });
+}
 
 function setSources(nextSources) {
   sources = nextSources;
@@ -85,6 +99,7 @@ function updateGamepad() {
     button.textContent = 'CONTROLE: DESCONECTADO';
     readout.textContent = 'Conecte um controle USB ou Bluetooth e pressione qualquer botão.';
     readout.className = 'gamepad-readout';
+    renderControlSimulation();
     return;
   }
   const name = activeGamepad.id.replace(/^.*\((.*)\).*$/, '$1').slice(0, 22) || 'CONECTADO';
@@ -93,6 +108,22 @@ function updateGamepad() {
   button.textContent = 'CONTROLE: CONECTADO';
   readout.textContent = `${name} · Eixos: ${axes || '—'} · Botões pressionados: ${pressed}`;
   readout.className = 'gamepad-readout connected';
+  renderControlSimulation(activeGamepad);
+}
+
+function mappedAxis(gamepad, action) {
+  if (!gamepad) return 0;
+  const value = gamepad.axes[controlMapping[action]] || 0;
+  return Math.abs(value) < 0.08 ? 0 : value;
+}
+
+function renderControlSimulation(gamepad) {
+  [['surge', 'surgeValue', 'surgeBar'], ['sway', 'swayValue', 'swayBar'], ['heave', 'heaveValue', 'heaveBar'], ['yaw', 'yawValue', 'yawBar']].forEach(([action, valueId, barId]) => {
+    const value = mappedAxis(gamepad, action);
+    $(`#${valueId}`).textContent = value.toFixed(2);
+    $(`#${barId}`).style.width = `${Math.abs(value) * 100}%`;
+    $(`#${barId}`).style.background = value < 0 ? '#8fbc64' : '#3a8263';
+  });
 }
 
 async function refreshHealth() {
@@ -134,6 +165,14 @@ async function request(url, options) {
 
 $('#openSettings').addEventListener('click', () => { dialog.showModal(); refreshHealth(); });
 $('#refreshHealth').addEventListener('click', refreshHealth);
+$('#openControls').addEventListener('click', () => { populateMappingControls(); controlsDialog.showModal(); });
+$('#saveControls').addEventListener('click', (event) => {
+  event.preventDefault();
+  controlMapping = { surge: Number($('#mapSurge').value), sway: Number($('#mapSway').value), heave: Number($('#mapHeave').value), yaw: Number($('#mapYaw').value) };
+  localStorage.setItem(mappingKey, JSON.stringify(controlMapping));
+  controlsDialog.close();
+  renderControlSimulation(activeGamepad);
+});
 $('#armButton').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ armed: !state.armed }) })));
 $('#depthHold').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ mode: state.mode === 'ALT_HOLD' ? 'STABILIZE' : 'ALT_HOLD' }) })));
 $('#stream').addEventListener('click', async () => {

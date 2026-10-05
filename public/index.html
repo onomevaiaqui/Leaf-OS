@@ -55,6 +55,16 @@
         <button class="action" id="record">● GRAVAR</button>
       </footer>
       <div id="gamepadReadout" class="gamepad-readout">Conecte um controle USB ou Bluetooth e pressione qualquer botão.</div>
+      <section class="control-simulation" aria-label="Simulação de movimentos do ROV">
+        <div><span class="eyebrow">SIMULAÇÃO · SEM COMANDO AO VEÍCULO</span><strong>Resposta do joystick</strong></div>
+        <button class="link-button" id="openControls">CONFIGURAR EIXOS</button>
+        <div class="command-grid">
+          <div class="command"><span>AVANÇAR / RECUAR</span><b id="surgeValue">0.00</b><i><em id="surgeBar"></em></i></div>
+          <div class="command"><span>LATERAL</span><b id="swayValue">0.00</b><i><em id="swayBar"></em></i></div>
+          <div class="command"><span>SUBIR / DESCER</span><b id="heaveValue">0.00</b><i><em id="heaveBar"></em></i></div>
+          <div class="command"><span>GUINADA</span><b id="yawValue">0.00</b><i><em id="yawBar"></em></i></div>
+        </div>
+      </section>
     </main>
 
     <dialog id="settings">
@@ -67,6 +77,19 @@
         <label>Bitrate (kbps)<input id="cameraBitrate" type="number" min="500" step="100" value="3500" /></label>
         <p class="note">A webcam conectada a este computador pode ser testada agora. Câmeras do ROV usam o pipeline GStreamer + MediaMTX no Raspberry.</p>
         <button class="action primary save" id="saveCamera" value="default">SALVAR CONFIGURAÇÃO</button>
+      </form>
+    </dialog>
+    <dialog id="controlsDialog">
+      <form method="dialog">
+        <div class="dialog-header"><div><span class="eyebrow">LEAF GROUND CONTROL</span><h2>Mapeamento do joystick</h2></div><button class="close" value="cancel">×</button></div>
+        <p class="note">Defina quais eixos representam cada movimento. Esta configuração é salva somente neste computador e ainda é usada apenas na simulação visual.</p>
+        <div class="mapping-grid">
+          <label>Avançar / recuar<select id="mapSurge"></select></label>
+          <label>Lateral<select id="mapSway"></select></label>
+          <label>Subir / descer<select id="mapHeave"></select></label>
+          <label>Guinada<select id="mapYaw"></select></label>
+        </div>
+        <button class="action primary save" id="saveControls" value="default">SALVAR MAPEAMENTO</button>
       </form>
     </dialog>
     <script src="app.js"></script>

@@ -11,6 +11,10 @@ O Leaf Ground Control detecta controles USB e Bluetooth diretamente no navegador
 3. A barra inferior deve mudar para **CONTROLE: CONECTADO**.
 4. Mova os manches e confira os valores dos eixos; valores próximos de `0.00` indicam centro.
 
+## Configurar eixos
+
+Clique em **Configurar eixos** no quadro de simulação. Cada função pode ser associada a um eixo diferente e a preferência fica salva no navegador deste computador. A simulação mostra intensidade e direção em tempo real, mas não envia nenhuma mensagem MAVLink de movimento.
+
 ## Próxima fase
 
 O mapeamento final será configurável e testado em simulador antes de ser liberado para o ROV. A configuração prevista é:
