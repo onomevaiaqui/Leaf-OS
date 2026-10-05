@@ -5,7 +5,7 @@ O **Pre-Dive** aparece ao clicar em **Armar** no Leaf Ground Control. Ele reúne
 ## Verificações automáticas
 
 - comunicação MAVLink recebida da Pixhawk;
-- tensão de bateria disponível;
+- limite mínimo de bateria configurado e tensão acima dele;
 - joystick conectado.
 
 ## Confirmações do operador

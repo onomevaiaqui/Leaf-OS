@@ -16,7 +16,7 @@
       </header>
 
       <section class="mission-bar">
-        <div><span class="eyebrow">VEÍCULO</span><strong>Leaf ROV · Unidade 01</strong></div>
+        <div><span class="eyebrow">VEÍCULO</span><strong id="vehicleName">Leaf ROV · Unidade 01</strong></div>
         <div class="status-line"><span id="armStatus" class="pill">DESARMADO</span><span id="modeStatus">STABILIZE</span></div>
       </section>
 
@@ -75,6 +75,7 @@
         <div class="camera-add"><span class="eyebrow">ADICIONAR CÂMERA IP</span><div class="form-row"><input id="rtspName" placeholder="Nome (opcional)" /><input id="rtspUrl" placeholder="rtsp://endereço/stream" /></div><button type="button" class="link-button" id="addRtsp">ADICIONAR URL RTSP</button></div>
         <div class="form-row"><label>Resolução<select id="cameraResolution"><option>1280x720</option><option>1920x1080</option><option>640x480</option></select></label><label>FPS<select id="cameraFps"><option value="30">30</option><option value="60">60</option><option value="25">25</option></select></label></div>
         <label>Bitrate (kbps)<input id="cameraBitrate" type="number" min="500" step="100" value="3500" /></label>
+        <section class="vehicle-settings"><span class="eyebrow">VEÍCULO E BATERIA</span><div class="form-row"><label>Nome do veículo<input id="profileName" maxlength="50" /></label><label>Tensão mínima para armar (V)<input id="minimumVoltage" type="number" min="0" step="0.1" placeholder="Ex.: 14.0" /></label></div></section>
         <p class="note">A webcam conectada a este computador pode ser testada agora. Câmeras do ROV usam o pipeline GStreamer + MediaMTX no Raspberry.</p>
         <button class="action primary save" id="saveCamera" value="default">SALVAR CONFIGURAÇÃO</button>
       </form>

@@ -11,6 +11,9 @@ let telemetryRecording = false;
 let telemetryLog = [];
 let recordingOrigin;
 let preDiveReleased = false;
+const profileKey = 'leaf-os-vehicle-profile';
+let vehicleProfile = { name: 'Leaf ROV · Unidade 01', minimumVoltage: 0 };
+try { vehicleProfile = { ...vehicleProfile, ...JSON.parse(localStorage.getItem(profileKey) || '{}') }; } catch { /* usa o padrão */ }
 const mappingKey = 'leaf-os-control-mapping';
 const defaultControlMapping = { surge: 1, sway: 0, heave: 3, yaw: 2 };
 let controlMapping = { ...defaultControlMapping };
@@ -127,7 +130,8 @@ function updatePreflight() {
   if (!state) return;
   const checks = [
     ['Comunicação MAVLink com a Pixhawk', state.mavlink?.connected === true],
-    ['Telemetria de bateria disponível', Number.isFinite(state.telemetry?.voltage)],
+    ['Limite mínimo de bateria configurado', vehicleProfile.minimumVoltage > 0],
+    [`Bateria segura (mínimo ${vehicleProfile.minimumVoltage || '—'} V)`, Number.isFinite(state.telemetry?.voltage) && vehicleProfile.minimumVoltage > 0 && state.telemetry.voltage >= vehicleProfile.minimumVoltage],
     ['Joystick conectado', Boolean(activeGamepad)],
   ];
   $('#preflightAutomatic').innerHTML = checks.map(([label, ready]) => `<div class="preflight-item ${ready ? 'ready' : ''}">${label}: ${ready ? 'pronto' : 'pendente'}</div>`).join('');
@@ -221,6 +225,7 @@ function render(data) {
   $('#current').innerHTML = `${data.telemetry.current.toFixed(1)} <em>A</em>`;
   $('#link').innerHTML = `${data.telemetry.link} <em>%</em>`;
   $('#resolution').textContent = `${data.camera.resolution.replace('x', '×')} · ${data.camera.fps} FPS`;
+  $('#vehicleName').textContent = vehicleProfile.name;
   // A telemetria atualiza a cada segundo. Não sobrescreva uma escolha que o
   // operador ainda está fazendo dentro do painel de configurações.
   if (!dialog.open) {
@@ -228,6 +233,8 @@ function render(data) {
     $('#cameraResolution').value = data.camera.resolution;
     $('#cameraFps').value = data.camera.fps;
     $('#cameraBitrate').value = data.camera.bitrate;
+    $('#profileName').value = vehicleProfile.name;
+    $('#minimumVoltage').value = vehicleProfile.minimumVoltage || '';
   }
   updatePreflight();
 }
@@ -281,7 +288,15 @@ $('#stream').addEventListener('click', async () => {
     window.alert(`Não foi possível abrir a webcam: ${error.message}`);
   }
 });
-$('#saveCamera').addEventListener('click', async (event) => { event.preventDefault(); const camera = { source: $('#cameraSource').value, resolution: $('#cameraResolution').value, fps: Number($('#cameraFps').value), bitrate: Number($('#cameraBitrate').value) }; await request('/api/camera', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify(camera) }); render(await request('/api/status')); dialog.close(); });
+$('#saveCamera').addEventListener('click', async (event) => {
+  event.preventDefault();
+  const camera = { source: $('#cameraSource').value, resolution: $('#cameraResolution').value, fps: Number($('#cameraFps').value), bitrate: Number($('#cameraBitrate').value) };
+  vehicleProfile = { name: $('#profileName').value.trim() || 'Leaf ROV · Unidade 01', minimumVoltage: Number($('#minimumVoltage').value) || 0 };
+  localStorage.setItem(profileKey, JSON.stringify(vehicleProfile));
+  await request('/api/camera', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify(camera) });
+  render(await request('/api/status'));
+  dialog.close();
+});
 $('#addRtsp').addEventListener('click', async () => {
   const url = $('#rtspUrl').value.trim();
   if (!url) return;
