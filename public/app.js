@@ -6,6 +6,8 @@ let sources = [];
 let stream;
 let localStream;
 let activeGamepad;
+let telemetryRecording = false;
+let telemetryLog = [];
 const mappingKey = 'leaf-os-control-mapping';
 const defaultControlMapping = { surge: 1, sway: 0, heave: 3, yaw: 2 };
 let controlMapping = { ...defaultControlMapping };
@@ -78,7 +80,11 @@ function renderHistory(history) {
 }
 
 async function refreshStatus() {
-  try { render(await request('/api/status')); } catch (error) { console.error(error); }
+  try {
+    const status = await request('/api/status');
+    render(status);
+    if (telemetryRecording) telemetryLog.push({ timestamp: new Date().toISOString(), ...status });
+  } catch (error) { console.error(error); }
 }
 
 async function refreshHistory() {
@@ -124,6 +130,27 @@ function renderControlSimulation(gamepad) {
     $(`#${barId}`).style.width = `${Math.abs(value) * 100}%`;
     $(`#${barId}`).style.background = value < 0 ? '#8fbc64' : '#3a8263';
   });
+}
+
+function downloadTelemetryLog() {
+  const heading = ['timestamp', 'pixhawk_connected', 'armed', 'mode', 'depth_m', 'heading_deg', 'voltage_v', 'current_a', 'link_percent'];
+  const rows = telemetryLog.map((entry) => [
+    entry.timestamp,
+    entry.mavlink?.connected === true,
+    entry.armed,
+    entry.mode,
+    entry.telemetry.depth,
+    entry.telemetry.heading,
+    entry.telemetry.voltage,
+    entry.telemetry.current,
+    entry.telemetry.link,
+  ].map((value) => JSON.stringify(value ?? '')).join(','));
+  const file = new Blob([[heading.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(file);
+  link.download = `leaf-os-telemetria-${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
 
 async function refreshHealth() {
@@ -175,6 +202,17 @@ $('#saveControls').addEventListener('click', (event) => {
 });
 $('#armButton').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ armed: !state.armed }) })));
 $('#depthHold').addEventListener('click', async () => render(await request('/api/vehicle', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({ mode: state.mode === 'ALT_HOLD' ? 'STABILIZE' : 'ALT_HOLD' }) })));
+$('#record').addEventListener('click', () => {
+  if (telemetryRecording) {
+    telemetryRecording = false;
+    $('#record').textContent = '● GRAVAR TELEMETRIA';
+    if (telemetryLog.length) downloadTelemetryLog();
+    return;
+  }
+  telemetryLog = [];
+  telemetryRecording = true;
+  $('#record').textContent = '■ PARAR E EXPORTAR';
+});
 $('#stream').addEventListener('click', async () => {
   try {
     if (state.camera.source === 'browser:local') {

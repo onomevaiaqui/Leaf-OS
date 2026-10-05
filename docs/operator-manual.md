@@ -22,6 +22,7 @@ Abra as configurações e verifique a seção **Prontidão do ROV**. Ela indica 
 - **Iniciar vídeo**: inicia a captura USB selecionada no Raspberry. Use novamente para parar.
 - **Controle**: a barra inferior indica se o joystick está conectado e mostra seus eixos. Nesta versão, ele ainda não movimenta o ROV.
 - **Resposta do joystick**: o quadro de simulação mostra os quatro movimentos configurados. Use **Configurar eixos** para adaptar o layout ao seu controle.
+- **Gravar telemetria**: inicia o registro local da sessão; ao parar, o navegador baixa um CSV com os dados coletados.
 
 ## Segurança
 
