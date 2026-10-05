@@ -10,7 +10,7 @@ let localStream;
 let activeGamepad;
 let preDiveReleased = false;
 const profileKey = 'leaf-os-vehicle-profile';
-let vehicleProfile = { name: 'Leaf ROV · Unidade 01', minimumVoltage: 0 };
+let vehicleProfile = { name: 'Leaf ROV · Unidade 01', minimumVoltage: 0, maximumEscTemperature: 0 };
 try { vehicleProfile = { ...vehicleProfile, ...JSON.parse(localStorage.getItem(profileKey) || '{}') }; } catch { /* usa o padrão */ }
 const mappingKey = 'leaf-os-control-mapping';
 const defaultControlMapping = { surge: 1, sway: 0, heave: 3, yaw: 2 };
@@ -104,6 +104,13 @@ function renderEquipmentLog(data) {
   $('#escLog').innerHTML = escs.length ? escs.map((esc) => `<div class="equipment-item"><strong>ESC ${esc.index}</strong>${number(esc.rpm, ' RPM')}<br>${number(esc.temperature, ' °C')} · ${number(esc.current, ' A')}</div>`).join('') : 'Aguardando dados de ESC.';
   const messages = equipment.messages || [];
   $('#messageLog').innerHTML = messages.length ? messages.slice().reverse().map((message) => `<div class="message-entry">[${escapeHtml(message.severity)}] ${escapeHtml(message.text)}</div>`).join('') : 'Nenhuma mensagem recebida.';
+  const alerts = [];
+  if (!mavlink.connected) alerts.push(['danger', 'Pixhawk desconectada: não há heartbeat MAVLink válido.']);
+  if (vehicleProfile.minimumVoltage > 0 && Number.isFinite(data.telemetry?.voltage) && data.telemetry.voltage < vehicleProfile.minimumVoltage) alerts.push(['danger', `Bateria abaixo do limite configurado (${vehicleProfile.minimumVoltage} V).`]);
+  const hotEsc = escs.filter((esc) => vehicleProfile.maximumEscTemperature > 0 && Number.isFinite(esc.temperature) && esc.temperature > vehicleProfile.maximumEscTemperature);
+  if (hotEsc.length) alerts.push(['danger', `Temperatura acima do limite em: ${hotEsc.map((esc) => `ESC ${esc.index}`).join(', ')}.`]);
+  if (!alerts.length) alerts.push(['ok', 'Nenhum alerta ativo com os limites atualmente configurados.']);
+  $('#equipmentAlerts').innerHTML = alerts.map(([level, text]) => `<div class="equipment-alert ${level === 'ok' ? '' : level}">${escapeHtml(text)}</div>`).join('');
 }
 
 async function refreshStatus() {
@@ -214,6 +221,7 @@ function render(data) {
     $('#cameraBitrate').value = data.camera.bitrate;
     $('#profileName').value = vehicleProfile.name;
     $('#minimumVoltage').value = vehicleProfile.minimumVoltage || '';
+    $('#maximumEscTemperature').value = vehicleProfile.maximumEscTemperature || '';
   }
   updatePreflight();
 }
@@ -260,7 +268,7 @@ $('#stream').addEventListener('click', async () => {
 $('#saveCamera').addEventListener('click', async (event) => {
   event.preventDefault();
   const camera = { source: $('#cameraSource').value, resolution: $('#cameraResolution').value, fps: Number($('#cameraFps').value), bitrate: Number($('#cameraBitrate').value) };
-  vehicleProfile = { name: $('#profileName').value.trim() || 'Leaf ROV · Unidade 01', minimumVoltage: Number($('#minimumVoltage').value) || 0 };
+  vehicleProfile = { name: $('#profileName').value.trim() || 'Leaf ROV · Unidade 01', minimumVoltage: Number($('#minimumVoltage').value) || 0, maximumEscTemperature: Number($('#maximumEscTemperature').value) || 0 };
   localStorage.setItem(profileKey, JSON.stringify(vehicleProfile));
   await request('/api/camera', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify(camera) });
   render(await request('/api/status'));

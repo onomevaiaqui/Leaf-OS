@@ -69,7 +69,7 @@
         <div class="camera-add"><span class="eyebrow">ADICIONAR CÂMERA IP</span><div class="form-row"><input id="rtspName" placeholder="Nome (opcional)" /><input id="rtspUrl" placeholder="rtsp://endereço/stream" /></div><button type="button" class="link-button" id="addRtsp">ADICIONAR URL RTSP</button></div>
         <div class="form-row"><label>Resolução<select id="cameraResolution"><option>1280x720</option><option>1920x1080</option><option>640x480</option></select></label><label>FPS<select id="cameraFps"><option value="30">30</option><option value="60">60</option><option value="25">25</option></select></label></div>
         <label>Bitrate (kbps)<input id="cameraBitrate" type="number" min="500" step="100" value="3500" /></label>
-        <section class="vehicle-settings"><span class="eyebrow">VEÍCULO E BATERIA</span><div class="form-row"><label>Nome do veículo<input id="profileName" maxlength="50" /></label><label>Tensão mínima para armar (V)<input id="minimumVoltage" type="number" min="0" step="0.1" placeholder="Ex.: 14.0" /></label></div></section>
+        <section class="vehicle-settings"><span class="eyebrow">VEÍCULO E BATERIA</span><div class="form-row"><label>Nome do veículo<input id="profileName" maxlength="50" /></label><label>Tensão mínima para armar (V)<input id="minimumVoltage" type="number" min="0" step="0.1" placeholder="Ex.: 14.0" /></label></div><label>Temperatura máxima do ESC (°C)<input id="maximumEscTemperature" type="number" min="0" step="1" placeholder="Opcional" /></label></section>
         <p class="note">A webcam conectada a este computador pode ser testada agora. Câmeras do ROV usam o pipeline GStreamer + MediaMTX no Raspberry.</p>
         <button class="action primary save" id="saveCamera" value="default">SALVAR CONFIGURAÇÃO</button>
       </form>
@@ -77,6 +77,7 @@
     <dialog id="equipmentLogDialog">
       <form method="dialog">
         <div class="dialog-header"><div><span class="eyebrow">LEAF OS · MAVLINK</span><h2>Log do equipamento</h2></div><button class="close" value="cancel">×</button></div>
+        <div id="equipmentAlerts" class="equipment-alerts"></div>
         <div id="equipmentSummary" class="equipment-summary"></div>
         <section class="log-section"><div><span class="eyebrow">HISTÓRICO</span><strong>Tensão da bateria</strong></div><span id="historyState">Aguardando telemetria</span><svg id="voltageChart" viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Gráfico de tensão"><polyline id="voltageLine" points="" /></svg></section>
         <section class="log-section"><span class="eyebrow">MOTORES / SAÍDAS PWM</span><div id="motorLog" class="equipment-grid">Aguardando dados da Pixhawk.</div></section>

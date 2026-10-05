@@ -9,3 +9,5 @@ O Pre-Dive exige:
 3. tensão igual ou maior que o limite.
 
 Não há um valor padrão propositalmente: a tensão segura depende do número de células, química da bateria, queda esperada no tether e política operacional do ROV. Configure o limite apenas depois de validar esses dados para o seu veículo.
+
+Na mesma seção de configuração é possível definir uma temperatura máxima para ESC. Esse limite aparece como alerta no Log do Equipamento e não deve ser escolhido sem consultar a especificação dos ESCs instalados.
