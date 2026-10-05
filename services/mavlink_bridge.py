@@ -122,12 +122,35 @@ def update_from_message(master, message):
             state["equipment"]["messages"] = state["equipment"]["messages"][-50:]
 
 
+def request_equipment_streams(master, heartbeat):
+    """Solicita telemetria de monitoramento; não envia nenhum comando de movimento."""
+    command = getattr(mavutil.mavlink, "MAV_CMD_SET_MESSAGE_INTERVAL", None)
+    if command is None:
+        return
+    streams = [
+        ("MAVLINK_MSG_ID_SYS_STATUS", 1_000_000),
+        ("MAVLINK_MSG_ID_BATTERY_STATUS", 1_000_000),
+        ("MAVLINK_MSG_ID_SERVO_OUTPUT_RAW", 500_000),
+        ("MAVLINK_MSG_ID_ESC_STATUS", 1_000_000),
+    ]
+    for message_name, interval_us in streams:
+        message_id = getattr(mavutil.mavlink, message_name, None)
+        if message_id is None:
+            continue
+        master.mav.command_long_send(
+            heartbeat.get_srcSystem(), heartbeat.get_srcComponent(),
+            command, 0,
+            message_id, interval_us, 0, 0, 0, 0, 0,
+        )
+
+
 def mavlink_loop():
     while True:
         master = None
         try:
             master = mavutil.mavlink_connection(CONNECTION, baud=BAUD, source_system=245)
             last_heartbeat = 0
+            equipment_streams_requested = False
             while True:
                 now = time.monotonic()
                 if now - last_heartbeat >= 1:
@@ -140,6 +163,9 @@ def mavlink_loop():
                 message = master.recv_match(blocking=True, timeout=1)
                 if message:
                     update_from_message(master, message)
+                    if message.get_type() == "HEARTBEAT" and not equipment_streams_requested:
+                        request_equipment_streams(master, message)
+                        equipment_streams_requested = True
                 add_sample_if_due()
                 with lock:
                     if state["lastHeartbeat"] and time.time() - state["lastHeartbeat"] > 5:
